@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style type="text/css">
+    .timer {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <div class="timer"> 現在の状態：{{currentState}}，残り時間：{{ countDown }}
+    </div>
+  </div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/locale/ja.js"></script>
+
+<script type="text/javascript">
+  var taiko = new Audio('taiko.mp3');
+  var gong = new Audio('gong.mp3');
+  
+  const vm = new Vue({
+    el: '#app',
+    data: {
+      countDown: '',
+      paramsInURL: location.search,
+      setcountLeft: 3,
+      cumulativeReadingTime: 0,
+      currentState: 'before_start', // reading, break
+      timeToNextBreakpoint: NaN
+    },
+    computed: {
+      queryDict: function () {
+        query_dict = new Object;
+        pairwise = this.paramsInURL.slice(1).split('&');
+        for (i = 0; pairwise[i]; i++) {
+          key_value = pairwise[i].split('=');
+          query_dict[key_value[0]] = key_value[1];
+        }
+        return query_dict;
+      },
+      paramsForTimer: function () {
+        // 時刻はすべて標準化（GMT+9:00）
+        // durationは秒単位
+        params = new Object;
+        repeat = Number(this.queryDict['repeat']);
+        reading_min = Number(this.queryDict['act']);
+        interval_min = Number(this.queryDict['interval']);
+
+        hour_min = this.queryDict['start'].split(':');
+        start_time = moment().hour(Number(hour_min[0])).minutes(Number(hour_min[1])).second(0);
+
+        total_duration_min = reading_min * repeat + interval_min * (repeat - 1);
+        end_time = start_time.clone().add(moment.duration(total_duration_min, 'minutes'));
+
+        return { start_time: start_time, end_time: end_time, num_repeat: repeat, duration_reading: reading_min, duration_interval: interval_min };
+      },
+
+    }
+  })
+
+  vm.setcountLeft = vm.paramsForTimer.num_repeat;
+  vm.timeToNextBreakpoint = vm.paramsForTimer.start_time.clone();
+
+  id = setInterval(function () {
+    const diff = vm.timeToNextBreakpoint.diff(moment());
+    const duration = moment.duration(diff);
+    const minutes = duration.minutes();
+    const seconds = duration.seconds();
+    vm.countDown = minutes + ':' + seconds;
+
+    if (vm.countDown === '0:0') {
+      switch (vm.currentState) {
+        case 'before_start':
+        case 'break':
+          vm.timeToNextBreakpoint.add(moment.duration(vm.paramsForTimer.duration_reading, 'minutes'));
+          vm.currentState = 'reading';
+          taiko.play();
+          break;
+        case 'reading':
+          vm.timeToNextBreakpoint.add(moment.duration(vm.paramsForTimer.duration_interval, 'minutes'));
+          vm.currentState = 'break';
+          gong.play();
+          vm.setcountLeft--;
+          console.log(vm.setcounterLeft);
+          break; 
+      }
+      vm.countDown = '';
+      if (vm.setcountLeft === 0) {
+        vm.currentState = 'finish';
+        clearInterval(id);
+      }
+    }
+  }, 1000);
+</script>
+
+</html>
