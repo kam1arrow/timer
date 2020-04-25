@@ -79,12 +79,13 @@
 
   id = setInterval(function () {
     const diff = vm.timeToNextBreakpoint.diff(moment());
-    const duration = moment.duration(diff);
-    const minutes = duration.minutes();
-    const seconds = duration.seconds();
-    vm.countDown = minutes + ':' + seconds;
+    // const duration = moment.duration(diff);
+    vm.countDown = moment.utc(moment.duration(diff).asMilliseconds()).format("mm:ss");
+    // const minutes = duration.minutes();
+    // const seconds = duration.seconds();
+    // vm.countDown = minutes + ':' + seconds;
 
-    if (vm.countDown === '0:0') {
+    if (vm.countDown === '00:00') {
       switch (vm.currentState) {
         case 'before_start':
         case 'break':
