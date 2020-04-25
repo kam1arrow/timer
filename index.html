@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <style type="text/css">
     .timer {
@@ -18,6 +19,14 @@
     <div class="timer"> 現在の状態：{{currentState}}，残り時間：{{ countDown }}
     </div>
   </div>
+  <div>
+    <input type="button" value="Interaction?" onclick="OnButtonClick();"/>
+  </div>
+  <script language="javascript" type="text/javascript">
+    function OnButtonClick() {
+      alert('アラートがUserのInteractionに見なされるかのテスト');
+      }
+  </script>
 </body>
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/moment.min.js"></script>
@@ -26,7 +35,7 @@
 <script type="text/javascript">
   var taiko = new Audio('taiko.mp3');
   var gong = new Audio('gong.mp3');
-  
+
   const vm = new Vue({
     el: '#app',
     data: {
@@ -91,7 +100,7 @@
           gong.play();
           vm.setcountLeft--;
           console.log(vm.setcounterLeft);
-          break; 
+          break;
       }
       vm.countDown = '';
       if (vm.setcountLeft === 0) {
