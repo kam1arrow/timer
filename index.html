@@ -8,6 +8,7 @@
       height: 100vh;
       display: flex;
       justify-content: center;
+      margin: auto;
       align-items: center;
     }
   </style>
@@ -16,17 +17,14 @@
 <body>
   <iframe src="silence.mp3" allow="autoplay" id="audio" style="display:none"></iframe>
   <div id="app">
-    <div class="timer"> 現在の状態：{{currentState}}，残り時間：{{ countDown }}
+    <div class="timer"> 
+      <p>
+        現在の状態：{{currentState}}<br>
+        残り時間：{{ countDown }}<br>
+        <input type="button" value="Interaction?" onclick="alert('alertがinteractionに見なされるかのテスト');"/>
+      </p>
     </div>
   </div>
-  <div>
-    <input type="button" value="Interaction?" onclick="OnButtonClick();"/>
-  </div>
-  <script language="javascript" type="text/javascript">
-    function OnButtonClick() {
-      alert('アラートがUserのInteractionに見なされるかのテスト');
-      }
-  </script>
 </body>
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/moment.min.js"></script>
