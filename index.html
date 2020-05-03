@@ -25,6 +25,13 @@
       </p>
     </div>
   </div>
+  <!-- ページ表示中にスリープモードにさせないための処理 -->
+  <!-- <div>
+    <video style="position: fixed; top:0; left:0; height:0;" muted autoplay loop>
+      <source src="blank.mp4">
+      <source src="blank.webm">
+    </video>
+  </div> -->
 </body>
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/moment.min.js"></script>
@@ -39,7 +46,7 @@
     data: {
       countDown: '',
       paramsInURL: location.search,
-      setcountLeft: 3,
+      setCountLeft: 3,
       cumulativeReadingTime: 0,
       currentState: 'before_start', // reading, break
       timeToNextBreakpoint: NaN
@@ -74,7 +81,7 @@
     }
   })
 
-  vm.setcountLeft = vm.paramsForTimer.num_repeat;
+  vm.setCountLeft = vm.paramsForTimer.num_repeat;
   vm.timeToNextBreakpoint = vm.paramsForTimer.start_time.clone();
 
   id = setInterval(function () {
@@ -97,12 +104,12 @@
           vm.timeToNextBreakpoint.add(moment.duration(vm.paramsForTimer.duration_interval, 'minutes'));
           vm.currentState = 'break';
           gong.play();
-          vm.setcountLeft--;
-          console.log(vm.setcounterLeft);
+          vm.setCountLeft--;
+          console.log(vm.setCounterLeft);
           break;
       }
       vm.countDown = '';
-      if (vm.setcountLeft === 0) {
+      if (vm.setCountLeft === 0) {
         vm.currentState = 'finish';
         clearInterval(id);
       }
