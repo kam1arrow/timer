@@ -16,16 +16,16 @@
 
 <body>
   <div id="app">
-    <div class="timer"> 
+    <div class="timer">
       <p>
         現在の状態：{{currentState}}<br>
         残り時間：{{ countDown }}<br>
         累積学習時間：{{ cumulativeTime }}<br>
-        <input type="button" value="Press! (at least once)" onclick="alert('Thanks!');"/>
+        <input type="button" value="Press! (at least once)" onclick="alert('Thanks!');" />
       </p>
     </div>
   </div>
-  
+
 </body>
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/moment.min.js"></script>
@@ -74,17 +74,47 @@
       },
     },
     methods: {
-      compute_setCountLeft: function() {
-        this.setCountLeft = this.paramsForTimer.num_repeat;
-      },
-      compute_imeToNextBreakpoint: function () {
+      refresh_counter: function () {
         this.timeToNextBreakpoint = this.paramsForTimer.start_time.clone();
+
+        time_elapsed_from_start = moment.duration(moment().diff(this.paramsForTimer['start_time'])).asMinutes();
+
+        reading_plus_break = this.paramsForTimer['duration_reading'] + this.paramsForTimer['duration_interval'];
+
+        // 現在のセット数（最初のセット=0）と残りセット数
+        set_num = Math.floor(time_elapsed_from_start / reading_plus_break);
+        console.log(set_num);
+        this.setCountLeft = this.paramsForTimer.num_repeat;
+
+        if (set_num >= 0) {
+          is_break = (time_elapsed_from_start % reading_plus_break) >= this.paramsForTimer.duration_reading;
+
+          if (is_break) {
+            this.currentState = 'break';
+            minutes_to_next_break_point = reading_plus_break * (set_num + 1);
+            this.cumulativeTime_min = this.paramsForTimer.duration_reading * (set_num + 1);
+            this.setCountLeft -= (set_num + 1);
+          } else {
+            this.currentState = 'reading';
+            minutes_to_next_break_point = reading_plus_break * set_num + this.paramsForTimer.duration_reading;
+            this.cumulativeTime_min = this.paramsForTimer.duration_reading * set_num;
+            this.setCountLeft -= set_num;
+          }
+
+          this.timeToNextBreakpoint.add(moment.duration(minutes_to_next_break_point, 'minutes'));          
+          
+          if (vm.cumulativeTime_min < 60) {
+            vm.cumulativeTime = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("00:mm:ss");
+          }
+          else {
+            vm.cumulativeTime = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("hh:mm:ss");
+          }
+        }
       },
-    }
+    },
   })
 
-  vm.compute_setCountLeft();
-  vm.compute_imeToNextBreakpoint();
+  vm.refresh_counter();
 
   id = setInterval(function () {
     const diff = vm.timeToNextBreakpoint.diff(moment());
@@ -105,7 +135,7 @@
           vm.setCountLeft--;
           vm.cumulativeTime_min += vm.paramsForTimer['duration_reading'];
           if (vm.cumulativeTime_min < 60) {
-            vm.cumulativeTime = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("00:mm:ss"); 
+            vm.cumulativeTime = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("00:mm:ss");
           }
           else {
             vm.cumulativeTime = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("hh:mm:ss");
