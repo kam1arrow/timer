@@ -20,7 +20,7 @@
       <p>
         現在の状態：{{currentState}}<br>
         残り時間：{{ countDown }}<br>
-        累積学習時間：{{ cumulativeTime_mmss }}<br>
+        累積学習時間：{{ cumulativeTime }}<br>
         <input type="button" value="Press! (at least once)" onclick="alert('Thanks!');"/>
       </p>
     </div>
@@ -42,7 +42,7 @@
       paramsInURL: location.search,
       setCountLeft: 3,
       cumulativeTime_min: 0,
-      cumulativeTime_mmss: '00:00:00',
+      cumulativeTime: '00:00:00',
       currentState: 'before_start', // reading, break
       timeToNextBreakpoint: NaN
     },
@@ -72,12 +72,19 @@
 
         return { start_time: start_time, end_time: end_time, num_repeat: repeat, duration_reading: reading_min, duration_interval: interval_min };
       },
-
+    },
+    methods: {
+      compute_setCountLeft: function() {
+        this.setCountLeft = this.paramsForTimer.num_repeat;
+      },
+      compute_imeToNextBreakpoint: function () {
+        this.timeToNextBreakpoint = this.paramsForTimer.start_time.clone();
+      },
     }
   })
 
-  vm.setCountLeft = vm.paramsForTimer.num_repeat;
-  vm.timeToNextBreakpoint = vm.paramsForTimer.start_time.clone();
+  vm.compute_setCountLeft();
+  vm.compute_imeToNextBreakpoint();
 
   id = setInterval(function () {
     const diff = vm.timeToNextBreakpoint.diff(moment());
@@ -97,8 +104,12 @@
           gong.play();
           vm.setCountLeft--;
           vm.cumulativeTime_min += vm.paramsForTimer['duration_reading'];
-          vm.cumulativeTime_mmss = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("hh:mm:ss");
-          console.log(vm.setCounterLeft);
+          if (vm.cumulativeTime_min < 60) {
+            vm.cumulativeTime = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("00:mm:ss"); 
+          }
+          else {
+            vm.cumulativeTime = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("hh:mm:ss");
+          }
           break;
       }
       vm.countDown = '';
