@@ -42,7 +42,7 @@
       paramsInURL: location.search,
       setCountLeft: 3,
       cumulativeTime_min: 0,
-      cumulativeTime_mmss: '00:00',
+      cumulativeTime_mmss: '00:00:00',
       currentState: 'before_start', // reading, break
       timeToNextBreakpoint: NaN
     },
@@ -97,7 +97,7 @@
           gong.play();
           vm.setCountLeft--;
           vm.cumulativeTime_min += vm.paramsForTimer['duration_reading'];
-          vm.cumulativeTime_mmss = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("mm:ss");
+          vm.cumulativeTime_mmss = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("hh:mm:ss");
           console.log(vm.setCounterLeft);
           break;
       }
