@@ -83,7 +83,6 @@
 
         // 現在のセット数（最初のセット=0）と残りセット数
         set_num = Math.floor(time_elapsed_from_start / reading_plus_break);
-        console.log(set_num);
         this.setCountLeft = this.paramsForTimer.num_repeat;
 
         if (set_num >= 0) {
@@ -103,6 +102,10 @@
 
           this.timeToNextBreakpoint.add(moment.duration(minutes_to_next_break_point, 'minutes'));          
           
+          if (vm.cumulativeTime_min > this.paramsForTimer.duration_reading * this.paramsForTimer.num_repeat) {
+            vm.cumulativeTime_min = this.paramsForTimer.duration_reading * this.paramsForTimer.num_repeat; 
+          }
+
           if (vm.cumulativeTime_min < 60) {
             vm.cumulativeTime = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("00:mm:ss");
           }
@@ -117,6 +120,7 @@
   vm.refresh_counter();
 
   id = setInterval(function () {
+
     const diff = vm.timeToNextBreakpoint.diff(moment());
     vm.countDown = moment.utc(moment.duration(diff).asMilliseconds()).format("mm:ss");
 
@@ -142,11 +146,11 @@
           }
           break;
       }
+    }
+    if (vm.setCountLeft <= 0) {
       vm.countDown = '';
-      if (vm.setCountLeft === 0) {
         vm.currentState = 'finish';
         clearInterval(id);
-      }
     }
   }, 500);
 </script>
