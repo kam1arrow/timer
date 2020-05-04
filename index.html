@@ -20,8 +20,8 @@
       <p>
         <!-- <a href="#test">test</a><br> -->
         現在の状態：{{currentState}} <span v-if="currentState ==='act'"> {{countNow}} </span> <br>
-        残り時間：{{ countDown }}<br>
-        累積学習時間：{{ cumulativeTime }}<br>
+        <span v-if="currentState != 'finish'">残り時間：{{ countDown }}</span>
+        <span v-else>累積時間：<span style="color:#D9073D">{{ cumulativeTime }}</span></span> <br>
         <input type="button" value="Press! (at least once)" onclick="alert('Thanks!');" />
       </p>
     </div>
@@ -43,8 +43,6 @@
       paramsInURL: location.search.slice(1).split('&'),
       // setTime: location.hash.slice(1),
       countLeft: 3,
-      cumulativeTime_min: 0,
-      cumulativeTime: '00:00',
       currentState: 'before_start', // act, break
       timeToNextBreakpoint: NaN
     },
@@ -62,11 +60,21 @@
 
         hour_min = query_dict['start'].split(':');
         time_start = moment().hour(Number(hour_min[0])).minutes(Number(hour_min[1])).second(0);
-        
-        return {time_start, num_repeat, duration_act, duration_break};
+
+        return { time_start, num_repeat, duration_act, duration_break };
       },
       countNow: function () {
         return this.params.num_repeat - this.countLeft + 1;
+      },
+      cumulativeTime: function () {
+        time_min = this.params.duration_act * this.params.num_repeat;
+        // moment.utcで60分未満のdurationを"hh:mm:ss"のformatで表示すると，12:52:00のようにhh=12となる
+        if (time_min < 60) {
+          return moment.utc(moment.duration(time_min, 'minutes').asMilliseconds()).format("mm:ss");
+        }
+        else {
+          return moment.utc(moment.duration(time_min, 'minutes').asMilliseconds()).format("hh:mm:ss");
+        }
       },
     },
     methods: {
@@ -92,36 +100,21 @@
           if (is_break) {
             this.currentState = 'break';
             minutes_to_next_break_point = act_plus_break * (set_num + 1);
-            this.cumulativeTime_min = this.params.duration_act * (set_num + 1);
             this.countLeft -= (set_num + 1);
           } else {
             this.currentState = 'act';
             minutes_to_next_break_point = act_plus_break * set_num + this.params.duration_act;
-            this.cumulativeTime_min = this.params.duration_act * set_num;
             this.countLeft -= set_num;
           }
 
-          this.timeToNextBreakpoint.add(moment.duration(minutes_to_next_break_point, 'minutes'));          
+          this.timeToNextBreakpoint.add(moment.duration(minutes_to_next_break_point, 'minutes'));
 
-          // 以降例外処理
-          if (vm.cumulativeTime_min > this.params.duration_act * this.params.num_repeat) {
-            vm.cumulativeTime_min = this.params.duration_act * this.params.num_repeat; 
-          }
-          
-          // moment.utcで60分未満のdurationを"hh:mm:ss"-formatで表示すると，12:52:00のようにhh=12となる
-          if (vm.cumulativeTime_min < 60) {
-            // vm.cumulativeTime = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("00:mm:ss");
-            vm.cumulativeTime = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("mm:ss");
-          }
-          else {
-            vm.cumulativeTime = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("hh:mm:ss");
-          }
         }
       },
     },
   })
 
-  
+
   vm.refresh_counter();
 
   id = setInterval(function () {
@@ -143,20 +136,13 @@
           vm.currentState = 'break';
           gong.play();
           vm.countLeft--;
-          vm.cumulativeTime_min += vm.params.duration_act;
-          if (vm.cumulativeTime_min < 60) {
-            vm.cumulativeTime = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("mm:ss");
-          }
-          else {
-            vm.cumulativeTime = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("hh:mm:ss");
-          }
           break;
       }
     }
     if (vm.countLeft <= 0) {
       vm.countDown = '';
-        vm.currentState = 'finish';
-        clearInterval(id);
+      vm.currentState = 'finish';
+      clearInterval(id);
     }
   }, 500);
 </script>
