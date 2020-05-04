@@ -149,7 +149,7 @@
           vm.setCountLeft--;
           vm.cumulativeTime_min += vm.paramsForTimer['duration_reading'];
           if (vm.cumulativeTime_min < 60) {
-            vm.cumulativeTime = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("00:mm:ss");
+            vm.cumulativeTime = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("mm:ss");
           }
           else {
             vm.cumulativeTime = moment.utc(moment.duration(vm.cumulativeTime_min, 'minutes').asMilliseconds()).format("hh:mm:ss");
