@@ -22,6 +22,7 @@
         残り時間：{{ countDown }}<br>
         累積学習時間：{{ cumulativeTime }}<br>
         <input type="button" value="Press! (at least once)" onclick="alert('Thanks!');" />
+        <!-- [idea]: 同じ設定で続けるボタン（promptから次回開始時刻を受け取り，breakpointに設定する．累積時間は据え置き．） -->
       </p>
     </div>
   </div>
@@ -42,7 +43,7 @@
       paramsInURL: location.search,
       setCountLeft: 3,
       cumulativeTime_min: 0,
-      cumulativeTime: '00:00:00',
+      cumulativeTime: '00:00',
       currentState: 'before_start', // reading, break
       timeToNextBreakpoint: NaN
     },
