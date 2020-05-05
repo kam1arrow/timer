@@ -11,18 +11,23 @@
       margin: auto;
       align-items: center;
     }
+    .image img { width: 100%; }
   </style>
 </head>
 
 <body>
   <div id="app">
-    <div class="timer">
+    <div v-if="!is_timer_set">
+      <vue-ctk-date-time-picker label="When do you start?" v-model="setTime" format="HH:mm" formatted="HH:mm" only-time>
+      </vue-ctk-date-time-picker>
+      <button v-on:click="set_timer()">ちんちら</button><br>
+      <p class="image"><img src="tintira.jpg"></p>
+    </div>
+    <div class="timer" v-else>
       <p>
-        <!-- <a href="#test">test</a><br> -->
         現在の状態：{{currentState}} <span v-if="currentState ==='act'"> {{countNow}} </span> <br>
         <span v-if="currentState != 'finish'">残り時間：{{ countDown }}</span>
         <span v-else>累積時間：<span style="color:#D9073D">{{ cumulativeTime }}</span></span> <br>
-        <input type="button" value="Press! (at least once)" onclick="alert('Thanks!');" />
       </p>
     </div>
   </div>
@@ -32,25 +37,34 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/locale/ja.js"></script>
 
+<link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/vue-ctk-date-time-picker@2.4.0/dist/vue-ctk-date-time-picker.css">
+<script
+  src="https://cdn.jsdelivr.net/npm/vue-ctk-date-time-picker@2.4.0/dist/vue-ctk-date-time-picker.umd.min.js"></script>
+
 <script type="text/javascript">
+  const VueCtkDateTimePicker = window['vue-ctk-date-time-picker'];
+  Vue.component('vue-ctk-date-time-picker', VueCtkDateTimePicker);
+  
   var taiko = new Audio('taiko.mp3');
   var gong = new Audio('gong.mp3');
 
   const vm = new Vue({
     el: '#app',
     data: {
+      is_timer_set: false,
       countDown: '',
-      paramsInURL: location.search.slice(1).split('&'),
-      // setTime: location.hash.slice(1),
+      queryInURL: location.search.slice(1).split('&'),
+      setTime: location.hash.slice(1),
       countLeft: 3,
       currentState: 'before_start', // act, break
-      timeToNextBreakpoint: NaN
+      timeToNextBreakpoint: null
     },
     computed: {
       params: function () {
         query_dict = new Object;
-        for (i = 0; this.paramsInURL[i]; i++) {
-          key_value = this.paramsInURL[i].split('=');
+        for (i = 0; this.queryInURL[i]; i++) {
+          key_value = this.queryInURL[i].split('=');
           query_dict[key_value[0]] = key_value[1];
         }
         // durationは分単位を想定
@@ -58,7 +72,7 @@
         duration_break = Number(query_dict['break']);
         num_repeat = Number(query_dict['repeat']);
 
-        hour_min = query_dict['start'].split(':');
+        hour_min = this.setTime.split(':');
         time_start = moment().hour(Number(hour_min[0])).minutes(Number(hour_min[1])).second(0);
 
         return { time_start, num_repeat, duration_act, duration_break };
@@ -78,6 +92,11 @@
       },
     },
     methods: {
+      set_timer: function () {
+        this.is_timer_set = true;
+        location.hash = this.setTime;
+        this.refresh_counter();
+      },
       refresh_counter: function () {
         // 基本的な計算の流れを，活動15分インターバル5分で活動するケースを取って説明
         // 開始時刻と現在時刻との差分がマイナス -> まだ始まっていない -> state: 開始前, breakpoint: 開始時刻
@@ -114,37 +133,43 @@
     },
   })
 
+  // vm.refresh_counter();
+  wait_start = setInterval("timer_start()",1000);　
 
-  vm.refresh_counter();
+  function timer_start() {
+    if (vm.is_timer_set) {
+      id = setInterval(function () {
+        clearInterval(wait_start);
 
-  id = setInterval(function () {
+        const diff = vm.timeToNextBreakpoint.diff(moment());
+        // [Fix] durationが一時間を超える場合，多分狂う．上のような例外処理が必要だが，面倒なので放置．
+        vm.countDown = moment.utc(moment.duration(diff).asMilliseconds()).format("mm:ss");
 
-    const diff = vm.timeToNextBreakpoint.diff(moment());
-    // [Fix] durationが一時間を超える場合，多分狂う．上のような例外処理が必要だが，面倒なので放置．
-    vm.countDown = moment.utc(moment.duration(diff).asMilliseconds()).format("mm:ss");
-
-    if (vm.countDown === '00:00') {
-      switch (vm.currentState) {
-        case 'before_start':
-        case 'break':
-          vm.timeToNextBreakpoint.add(moment.duration(vm.params.duration_act, 'minutes'));
-          vm.currentState = 'act';
-          taiko.play();
-          break;
-        case 'act':
-          vm.timeToNextBreakpoint.add(moment.duration(vm.params.duration_break, 'minutes'));
-          vm.currentState = 'break';
-          gong.play();
-          vm.countLeft--;
-          break;
-      }
+        if (vm.countDown === '00:00') {
+          switch (vm.currentState) {
+            case 'before_start':
+            case 'break':
+              vm.timeToNextBreakpoint.add(moment.duration(vm.params.duration_act, 'minutes'));
+              vm.currentState = 'act';
+              taiko.play();
+              break;
+            case 'act':
+              vm.timeToNextBreakpoint.add(moment.duration(vm.params.duration_break, 'minutes'));
+              vm.currentState = 'break';
+              gong.play();
+              vm.countLeft--;
+              break;
+          }
+        }
+        if (vm.countLeft <= 0) {
+          vm.countDown = '';
+          vm.currentState = 'finish';
+          clearInterval(id);
+        }
+      }, 500);
     }
-    if (vm.countLeft <= 0) {
-      vm.countDown = '';
-      vm.currentState = 'finish';
-      clearInterval(id);
-    }
-  }, 500);
+  }
+
 </script>
 
 </html>
