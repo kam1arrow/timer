@@ -73,8 +73,8 @@
         duration_break = query_dict['break'] ? Number(query_dict['break']) : 3;
         num_repeat = query_dict['repeat'] ? Number(query_dict['repeat']) : 6;
 
-        hour_min = this.setTime.split(':');
-        time_start = moment().hour(Number(hour_min[0])).minutes(Number(hour_min[1])).second(0);
+        // hour_min = this.setTime.split(':');
+        time_start = moment(this.setTime, "HH:mm");
 
         return { time_start, num_repeat, duration_act, duration_break };
       },
@@ -83,16 +83,22 @@
       },
       cumulativeTime: function () {
         time_min = this.params.duration_act * this.params.num_repeat;
-        // moment.utcで60分未満のdurationを"hh:mm:ss"のformatで表示すると，12:52:00のようにhh=12となる
+        return this.format_time(time_min);
+      },
+    },
+    methods: {
+      format_time: function (time_min) {
+        // スタンスとしては，基本は"mm:ss"表示，例外が"HH:mm:ss"（"hh:mm:ss"だと60分未満のとき，hh=12になるので注意）
+        // 基本と例外とで桁数が違うのは，次のような理由によります．
+        // ・4桁で済むか6桁必要かでデザイン性が結構変わる
+        // ・一時間以上のカウントダウンが必要になることはほとんどない
         if (time_min < 60) {
           return moment.utc(moment.duration(time_min, 'minutes').asMilliseconds()).format("mm:ss");
         }
         else {
-          return moment.utc(moment.duration(time_min, 'minutes').asMilliseconds()).format("hh:mm:ss");
+          return moment.utc(moment.duration(time_min, 'minutes').asMilliseconds()).format("HH:mm:ss");
         }
       },
-    },
-    methods: {
       set_timer: function () {
         this.is_timer_set = true;
         location.hash = this.setTime;
@@ -141,9 +147,9 @@
       id = setInterval(function () {
         clearInterval(wait_start);
 
-        const diff = vm.nextBreakpoint.diff(moment());
-        // [Fix] durationが一時間を超える場合，多分狂う．上のような例外処理が必要だが，面倒なので放置．
-        vm.countDown = moment.utc(moment.duration(diff).asMilliseconds()).format("mm:ss");
+        diff = vm.nextBreakpoint.diff(moment());
+        count_down_min = moment.duration(diff).asMinutes(); 
+        vm.countDown = vm.format_time(count_down_min);
 
         if (vm.countDown === '00:00') {
           switch (vm.currentState) {
