@@ -59,7 +59,7 @@
       setTime: location.hash.slice(1),
       countLeft: 3,
       currentState: 'before_start', // act, break
-      timeToNextBreakpoint: null
+      nextBreakpoint: null
     },
     computed: {
       params: function () {
@@ -103,7 +103,7 @@
         // 開始時刻と現在時刻との差分がマイナス -> まだ始まっていない -> state: 開始前, breakpoint: 開始時刻
         // プラスの場合，差分を(15+5)で割った商はどのセットにいるのかを示し，余りは活動中（15以下）なのか休憩中（15より大）なのかを示す．
         // それぞれの場合に応じて，適切なstateとbreakpointを設定すればよい．
-        this.timeToNextBreakpoint = this.params.time_start.clone();
+        this.nextBreakpoint = this.params.time_start.clone();
 
         time_elapsed = moment.duration(moment().diff(this.params.time_start)).asMinutes();
 
@@ -127,14 +127,13 @@
             this.countLeft -= set_num;
           }
 
-          this.timeToNextBreakpoint.add(moment.duration(minutes_to_next_break_point, 'minutes'));
+          this.nextBreakpoint.add(moment.duration(minutes_to_next_break_point, 'minutes'));
 
         }
       },
     },
   })
 
-  // vm.refresh_counter();
   wait_start = setInterval("timer_start()",1000);　
 
   function timer_start() {
@@ -142,7 +141,7 @@
       id = setInterval(function () {
         clearInterval(wait_start);
 
-        const diff = vm.timeToNextBreakpoint.diff(moment());
+        const diff = vm.nextBreakpoint.diff(moment());
         // [Fix] durationが一時間を超える場合，多分狂う．上のような例外処理が必要だが，面倒なので放置．
         vm.countDown = moment.utc(moment.duration(diff).asMilliseconds()).format("mm:ss");
 
@@ -150,12 +149,12 @@
           switch (vm.currentState) {
             case 'before_start':
             case 'break':
-              vm.timeToNextBreakpoint.add(moment.duration(vm.params.duration_act, 'minutes'));
+              vm.nextBreakpoint.add(moment.duration(vm.params.duration_act, 'minutes'));
               vm.currentState = 'act';
               taiko.play();
               break;
             case 'act':
-              vm.timeToNextBreakpoint.add(moment.duration(vm.params.duration_break, 'minutes'));
+              vm.nextBreakpoint.add(moment.duration(vm.params.duration_break, 'minutes'));
               vm.currentState = 'break';
               gong.play();
               vm.countLeft--;
