@@ -69,9 +69,9 @@
           query_dict[key_value[0]] = key_value[1];
         }
         // durationは分単位を想定
-        duration_act = Number(query_dict['act']);
-        duration_break = Number(query_dict['break']);
-        num_repeat = Number(query_dict['repeat']);
+        duration_act = query_dict['act'] ? Number(query_dict['act']) : 10;
+        duration_break = query_dict['break'] ? Number(query_dict['break']) : 3;
+        num_repeat = query_dict['repeat'] ? Number(query_dict['repeat']) : 6;
 
         hour_min = this.setTime.split(':');
         time_start = moment().hour(Number(hour_min[0])).minutes(Number(hour_min[1])).second(0);
