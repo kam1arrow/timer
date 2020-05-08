@@ -46,7 +46,7 @@
 <script type="text/javascript">
   const VueCtkDateTimePicker = window['vue-ctk-date-time-picker'];
   Vue.component('vue-ctk-date-time-picker', VueCtkDateTimePicker);
-  
+
   const taiko = new Audio('taiko.mp3');
   const gong = new Audio('gong.mp3');
 
@@ -122,7 +122,7 @@
           const is_break = (time_elapsed % act_plus_break) > this.params.duration_act;
 
           // ケースに応じて，state，設定すべきbreakpointまでの相対時間，累積時間，残りカウントの4つを設定
-          let minutes_to_next_break_point; 
+          let minutes_to_next_break_point;
           // 上がないと変数のスコープがグローバルになる，
           // ただletの使用を非推奨とする思想＝再代入可能性はバグのもと，にしたがうならば，三項演算子などによる対応も検討して良い．
 
@@ -151,7 +151,7 @@
         clearInterval(wait_start);
 
         const diff = vm.nextBreakpoint.diff(moment());
-        const count_down_min = moment.duration(diff).asMinutes(); 
+        const count_down_min = moment.duration(diff).asMinutes();
         vm.countDown = vm.format_time(count_down_min);
 
         if (vm.countDown === '00:00') {
