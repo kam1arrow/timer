@@ -4,15 +4,6 @@
 <head>
   <title>ちんちらタイマー</title>
   <style type="text/css">
-    .timer {
-      font-size: 3vw;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      margin: auto;
-      align-items: center;
-    }
-
     .image {
       max-width: 1000px;
       max-height: 1000px;
@@ -22,7 +13,7 @@
       width: 100%;
     }
 
-    .item {
+    .timer {
       position: relative;
       font-size: 3vw;
       height: 100vh;
@@ -33,14 +24,18 @@
     }
 
     .timer-time {
+      font-size: 75%;
+    }
+
+    .finish-message {
       text-align: center;
       position: absolute;
       line-height: 4em;
       width: 100%;
-      font-size: 1em;
+      font-size: 75%;
     }
 
-    .state {
+    .display-state {
       position: absolute;
       text-align: center;
       top: 400px;
@@ -60,16 +55,14 @@
       <p class="image"><img src="tintira.jpg"></p>
     </div>
     <div v-else>
-      <div class="state" v-bind:style="styleNowDisplay"> {{stateNowDisplay}} </div>
-      <div class="item">
-        <!-- <div>現在の状態：{{currentState}} <span v-if="currentState ==='act'"> {{countNow}} </span></div> -->
-        <div v-if="currentState !='finish'" class="timer-time"> {{ countDown }} </div>
-        <div v-else class="timer-time">
-          <span>累積学習時間は</span><span style="color:#D9073D"> {{ cumulativeTime }} </span><span>です！えらい！</span>
+      <div class="display-state" v-bind:style="styleNowDisplay"> {{stateNowDisplay}} </div>
+      <div class="timer">
+        <div v-if="currentState === 'finish'" class="finish-message">
+          <span>累積学習時間は<span style="color:#D9073D"> {{ cumulativeTime }} </span>です！えらい！</span>
         </div>
         <svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
-          <!-- <text v-if="currentState !='finish'" class="timer-time" x="50%" y="50%" text-anchor="middle"
-            dominant-baseline="central">{{ countDown }}</text> -->
+          <text v-if="currentState !='finish'" class="timer-time" x="50%" y="50%" text-anchor="middle"
+            dominant-baseline="central">{{ countDown }}</text>
           <circle v-if="currentState ==='before_start'" r="100" cy="110" cx="110" stroke-width="19" stroke="#191970"
             fill="none" />
           <circle v-else-if="currentState ==='act'" r="100" cy="110" cx="110" stroke-width="19" stroke="#006400"
