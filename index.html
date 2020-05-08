@@ -77,205 +77,204 @@
           <circle v-else-if="currentState ==='break'" r="100" cy="110" cx="110" stroke-width="19" stroke="#8b0000"
             fill="none" />
           <circle v-if="currentState !='finish'" v-bind:style="classMoveCircle" r="100" cy="110" cx="110"
-            stroke-width="20" stroke="#ffffff" fill="none" opacity="85%" transform="rotate(-90, 110, 110)/>
+            stroke-width="20" stroke="#ffffff" fill="none" opacity="85%" transform="rotate(-90, 110, 110)" />
         </svg>
       </div>
     </div>
   </div>
 
 </body>
-<script src=" https://cdn.jsdelivr.net/npm/vue/dist/vue.js">
-            </script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/moment.min.js"></script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/locale/ja.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/locale/ja.js"></script>
 
-            <link rel="stylesheet"
-              href="https://cdn.jsdelivr.net/npm/vue-ctk-date-time-picker@2.4.0/dist/vue-ctk-date-time-picker.css">
-            <script
-              src="https://cdn.jsdelivr.net/npm/vue-ctk-date-time-picker@2.4.0/dist/vue-ctk-date-time-picker.umd.min.js"></script>
+<link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/vue-ctk-date-time-picker@2.4.0/dist/vue-ctk-date-time-picker.css">
+<script
+  src="https://cdn.jsdelivr.net/npm/vue-ctk-date-time-picker@2.4.0/dist/vue-ctk-date-time-picker.umd.min.js"></script>
 
-            <script type="text/javascript">
-              const VueCtkDateTimePicker = window['vue-ctk-date-time-picker'];
-              Vue.component('vue-ctk-date-time-picker', VueCtkDateTimePicker);
+<script type="text/javascript">
+  const VueCtkDateTimePicker = window['vue-ctk-date-time-picker'];
+  Vue.component('vue-ctk-date-time-picker', VueCtkDateTimePicker);
 
-              const taiko = new Audio('taiko.mp3');
-              const gong = new Audio('gong.mp3');
+  const taiko = new Audio('taiko.mp3');
+  const gong = new Audio('gong.mp3');
 
-              const vm = new Vue({
-                el: '#app',
-                data: {
-                  is_timer_set: false,
-                  countDown: '',
-                  queryInURL: location.search.slice(1).split('&'),
-                  setTime: location.hash.slice(1),
-                  countLeft: 3,
-                  currentState: 'before_start', // act, break, finish
-                  nextBreakpoint: null,
-                },
-                computed: {
-                  params: function () {
-                    const query_dict = new Object;
-                    for (i = 0; this.queryInURL[i]; i++) {
-                      const key_value = this.queryInURL[i].split('=');
-                      query_dict[key_value[0]] = key_value[1];
-                    }
-                    // NOTE: durationは分単位を想定
-                    const duration_act = query_dict['act'] ? Number(query_dict['act']) : 10;
-                    const duration_break = query_dict['break'] ? Number(query_dict['break']) : 3;
-                    const num_repeat = query_dict['repeat'] ? Number(query_dict['repeat']) : 6;
-                    const time_start = moment(this.setTime, "HH:mm");
+  const vm = new Vue({
+    el: '#app',
+    data: {
+      is_timer_set: false,
+      countDown: '',
+      queryInURL: location.search.slice(1).split('&'),
+      setTime: location.hash.slice(1),
+      countLeft: 3,
+      currentState: 'before_start', // act, break, finish
+      nextBreakpoint: null,
+    },
+    computed: {
+      params: function () {
+        const query_dict = new Object;
+        for (i = 0; this.queryInURL[i]; i++) {
+          const key_value = this.queryInURL[i].split('=');
+          query_dict[key_value[0]] = key_value[1];
+        }
+        // NOTE: durationは分単位を想定
+        const duration_act = query_dict['act'] ? Number(query_dict['act']) : 10;
+        const duration_break = query_dict['break'] ? Number(query_dict['break']) : 3;
+        const num_repeat = query_dict['repeat'] ? Number(query_dict['repeat']) : 6;
+        const time_start = moment(this.setTime, "HH:mm");
 
-                    return { time_start, num_repeat, duration_act, duration_break };
-                  },
-                  countNow: function () {
-                    return this.params.num_repeat - this.countLeft + 1;
-                  },
-                  stateNowDisplay: function () {
-                    let display;
+        return { time_start, num_repeat, duration_act, duration_break };
+      },
+      countNow: function () {
+        return this.params.num_repeat - this.countLeft + 1;
+      },
+      stateNowDisplay: function () {
+        let display;
 
-                    switch (this.currentState) {
-                      case 'before_start':
-                        display = 'もう少しで始まるよ！';
-                        break;
-                      case 'act':
-                        display = 'クンフー' + ' ' + this.countNow.toString(10);
-                        break;
-                      case 'break':
-                        display = '休憩中...';
-                        break;
-                      case 'finish':
-                        display = '終了！';
-                        break;
-                    }
+        switch (this.currentState) {
+          case 'before_start':
+            display = 'もう少しで始まるよ！';
+            break;
+          case 'act':
+            display = 'クンフー' + ' ' + this.countNow.toString(10);
+            break;
+          case 'break':
+            display = '休憩中...';
+            break;
+          case 'finish':
+            display = '終了！';
+            break;
+        }
 
-                    return display;
-                  },
-                  styleNowDisplay: function () {
-                    const list = { 'before_start': "#191970", 'act': "#006400", 'break': "#8b0000", 'finish': "#D9073D" };
-                    return { color: list[this.currentState] };
-                  },
-                  cumulativeTime: function () {
-                    time_min = this.params.duration_act * this.params.num_repeat;
-                    return this.format_time(time_min);
-                  },
-                  durationCurrentState: function () {
-                    // NOTE: before_startでは残り3分からゲージを減らしていく
-                    // 単位はsecond
-                    const list = { 'before_start': 180, 'act': this.params.duration_act * 60, 'break': this.params.duration_break * 60 };
-                    return list[this.currentState];
-                  },
-                  classMoveCircle: function () {
-                    // NOTE: この値は自力で頑張って微調整．アニメーション見ながら，3分タイマーの0カウントでぴったりバーも0になるようにした
-                    const initial_offset = 202 * Math.PI;
-                    // OPTIMIZE: moment -> "HH:mm" -> HHとmmを整数で取得，の流れは二度手間感がある
-                    let [min, sec] = this.countDown.split(':').map(str => parseInt(str, 10));
+        return display;
+      },
+      styleNowDisplay: function () {
+        const list = { 'before_start': "#191970", 'act': "#006400", 'break': "#8b0000", 'finish': "#D9073D" };
+        return { color: list[this.currentState] };
+      },
+      cumulativeTime: function () {
+        time_min = this.params.duration_act * this.params.num_repeat;
+        return this.format_time(time_min);
+      },
+      durationCurrentState: function () {
+        // NOTE: before_startでは残り3分からゲージを減らしていく
+        // 単位はsecond
+        const list = { 'before_start': 180, 'act': this.params.duration_act * 60, 'break': this.params.duration_break * 60 };
+        return list[this.currentState];
+      },
+      classMoveCircle: function () {
+        // NOTE: この値は自力で頑張って微調整．アニメーション見ながら，3分タイマーの0カウントでぴったりバーも0になるようにした
+        const initial_offset = 202 * Math.PI;
+        // OPTIMIZE: moment -> "HH:mm" -> HHとmmを整数で取得，の流れは二度手間感がある
+        let [min, sec] = this.countDown.split(':').map(str => parseInt(str, 10));
 
-                    if (this.currentState === 'before_start' && min > 2) {
-                      [min, sec] = [3, 0];
-                    }
+        if (this.currentState === 'before_start' && min > 2) {
+          [min, sec] = [3, 0];
+        }
 
-                    // NOTE: stateの切り替えが起こるとき，transitionを0sで行わないと現stateの描画と前stateでの描画が干渉する
-                    // FIXME: もうちょっとスムーズに切り替えられないかなぁ
-                    const trans_sec = (this.countDown === "00:00") ? 0 : 1;
-                    // NOTE: 開始の合図と同時に円が出現するようにテコ入れ
-                    const offset = (this.countDown === "00:00") ? initial_offset : initial_offset * (min * 60 + sec) / this.durationCurrentState;
+        // NOTE: stateの切り替えが起こるとき，transitionを0sで行わないと現stateの描画と前stateでの描画が干渉する
+        // FIXME: もうちょっとスムーズに切り替えられないかなぁ
+        const trans_sec = (this.countDown === "00:00") ? 0 : 1;
+        // NOTE: 開始の合図と同時に円が出現するようにテコ入れ
+        const offset = (this.countDown === "00:00") ? initial_offset : initial_offset * (min * 60 + sec) / this.durationCurrentState;
 
-                    return { 'stroke-dasharray': initial_offset, 'stroke-dashoffset': offset, transition: `${trans_sec}s all linear` };
-                  }
-                },
-                methods: {
-                  format_time: function (time_min) {
-                    // スタンスとしては，基本は"mm:ss"表示，例外が"HH:mm:ss"（"hh:mm:ss"だと60分未満のとき，hh=12になるので注意）
-                    // 基本と例外とで桁数が違うのは，次のような理由によります．
-                    // ・4桁で済むか6桁必要かでデザイン性が結構変わる
-                    // ・一時間以上のカウントダウンが必要になることはほとんどない
-                    if (time_min < 60) {
-                      return moment.utc(moment.duration(time_min, 'minutes').asMilliseconds()).format("mm:ss");
-                    }
-                    else {
-                      return moment.utc(moment.duration(time_min, 'minutes').asMilliseconds()).format("HH:mm:ss");
-                    }
-                  },
-                  set_timer: function () {
-                    this.is_timer_set = true;
-                    location.hash = this.setTime; //URLの書き換え
-                    this.refresh_counter();
-                  },
-                  refresh_counter: function () {
-                    // 基本的な計算の流れを，活動15分インターバル5分で活動するケースを取って説明
-                    // 開始時刻と現在時刻との差分がマイナス -> まだ始まっていない -> state: 開始前, breakpoint: 開始時刻
-                    // プラスの場合，差分を(15+5)で割った商はどのセットにいるのかを示し，余りは活動中（15以下）なのか休憩中（15より大）なのかを示す．
-                    // それぞれの場合に応じて，適切なstateとbreakpointを設定すればよい．
-                    this.nextBreakpoint = this.params.time_start.clone();
+        return { 'stroke-dasharray': initial_offset, 'stroke-dashoffset': offset, transition: `${trans_sec}s all linear` };
+      }
+    },
+    methods: {
+      format_time: function (time_min) {
+        // スタンスとしては，基本は"mm:ss"表示，例外が"HH:mm:ss"（"hh:mm:ss"だと60分未満のとき，hh=12になるので注意）
+        // 基本と例外とで桁数が違うのは，次のような理由によります．
+        // ・4桁で済むか6桁必要かでデザイン性が結構変わる
+        // ・一時間以上のカウントダウンが必要になることはほとんどない
+        if (time_min < 60) {
+          return moment.utc(moment.duration(time_min, 'minutes').asMilliseconds()).format("mm:ss");
+        }
+        else {
+          return moment.utc(moment.duration(time_min, 'minutes').asMilliseconds()).format("HH:mm:ss");
+        }
+      },
+      set_timer: function () {
+        this.is_timer_set = true;
+        location.hash = this.setTime; //URLの書き換え
+        this.refresh_counter();
+      },
+      refresh_counter: function () {
+        // 基本的な計算の流れを，活動15分インターバル5分で活動するケースを取って説明
+        // 開始時刻と現在時刻との差分がマイナス -> まだ始まっていない -> state: 開始前, breakpoint: 開始時刻
+        // プラスの場合，差分を(15+5)で割った商はどのセットにいるのかを示し，余りは活動中（15以下）なのか休憩中（15より大）なのかを示す．
+        // それぞれの場合に応じて，適切なstateとbreakpointを設定すればよい．
+        this.nextBreakpoint = this.params.time_start.clone();
 
-                    const time_elapsed = moment.duration(moment().diff(this.params.time_start)).asMinutes();
-                    const act_plus_break = this.params.duration_act + this.params.duration_break;
+        const time_elapsed = moment.duration(moment().diff(this.params.time_start)).asMinutes();
+        const act_plus_break = this.params.duration_act + this.params.duration_break;
 
-                    // 現在のセット数（最初のセット=0）と残りセット数
-                    const set_num = Math.floor(time_elapsed / act_plus_break);
-                    this.countLeft = this.params.num_repeat;
+        // 現在のセット数（最初のセット=0）と残りセット数
+        const set_num = Math.floor(time_elapsed / act_plus_break);
+        this.countLeft = this.params.num_repeat;
 
-                    if (set_num >= 0) {
-                      const is_break = (time_elapsed % act_plus_break) > this.params.duration_act;
+        if (set_num >= 0) {
+          const is_break = (time_elapsed % act_plus_break) > this.params.duration_act;
 
-                      // ケースに応じて，state，設定すべきbreakpointまでの相対時間，累積時間，残りカウントの4つを設定
-                      let minutes_to_next_break_point;
-                      // 上がないと変数のスコープがグローバルになる，
-                      // ただletの使用を非推奨とする思想＝再代入可能性はバグのもと，にしたがうならば，三項演算子などによる対応も検討して良い．
+          // ケースに応じて，state，設定すべきbreakpointまでの相対時間，累積時間，残りカウントの4つを設定
+          let minutes_to_next_break_point;
+          // 上がないと変数のスコープがグローバルになる，
+          // ただletの使用を非推奨とする思想＝再代入可能性はバグのもと，にしたがうならば，三項演算子などによる対応も検討して良い．
 
-                      if (is_break) {
-                        this.currentState = 'break';
-                        minutes_to_next_break_point = act_plus_break * (set_num + 1);
-                        this.countLeft -= (set_num + 1);
-                      } else {
-                        this.currentState = 'act';
-                        minutes_to_next_break_point = act_plus_break * set_num + this.params.duration_act;
-                        this.countLeft -= set_num;
-                      }
+          if (is_break) {
+            this.currentState = 'break';
+            minutes_to_next_break_point = act_plus_break * (set_num + 1);
+            this.countLeft -= (set_num + 1);
+          } else {
+            this.currentState = 'act';
+            minutes_to_next_break_point = act_plus_break * set_num + this.params.duration_act;
+            this.countLeft -= set_num;
+          }
 
-                      this.nextBreakpoint.add(moment.duration(minutes_to_next_break_point, 'minutes'));
+          this.nextBreakpoint.add(moment.duration(minutes_to_next_break_point, 'minutes'));
 
-                    }
-                  },
-                },
-              })
+        }
+      },
+    },
+  })
 
-              wait_start = setInterval("timer_start()", 1000);
+  wait_start = setInterval("timer_start()", 1000);
 
-              function timer_start() {
-                if (vm.is_timer_set) {
-                  const id = setInterval(function () {
-                    clearInterval(wait_start);
+  function timer_start() {
+    if (vm.is_timer_set) {
+      const id = setInterval(function () {
+        clearInterval(wait_start);
 
-                    const diff = vm.nextBreakpoint.diff(moment());
-                    const count_down_min = moment.duration(diff).asMinutes();
-                    vm.countDown = vm.format_time(count_down_min);
+        const diff = vm.nextBreakpoint.diff(moment());
+        const count_down_min = moment.duration(diff).asMinutes();
+        vm.countDown = vm.format_time(count_down_min);
 
-                    if (vm.countDown === '00:00') {
-                      switch (vm.currentState) {
-                        case 'before_start':
-                        case 'break':
-                          vm.nextBreakpoint.add(moment.duration(vm.params.duration_act, 'minutes'));
-                          vm.currentState = 'act';
-                          taiko.play();
-                          break;
-                        case 'act':
-                          vm.nextBreakpoint.add(moment.duration(vm.params.duration_break, 'minutes'));
-                          vm.currentState = 'break';
-                          gong.play();
-                          vm.countLeft--;
-                          break;
-                      }
-                    }
-                    if (vm.countLeft <= 0) {
-                      vm.countDown = '';
-                      vm.currentState = 'finish';
-                      clearInterval(id);
-                    }
-                  }, 500);
-                }
-              }
+        if (vm.countDown === '00:00') {
+          switch (vm.currentState) {
+            case 'before_start':
+            case 'break':
+              vm.nextBreakpoint.add(moment.duration(vm.params.duration_act, 'minutes'));
+              vm.currentState = 'act';
+              taiko.play();
+              break;
+            case 'act':
+              vm.nextBreakpoint.add(moment.duration(vm.params.duration_break, 'minutes'));
+              vm.currentState = 'break';
+              gong.play();
+              vm.countLeft--;
+              break;
+          }
+        }
+        if (vm.countLeft <= 0) {
+          vm.countDown = '';
+          vm.currentState = 'finish';
+          clearInterval(id);
+        }
+      }, 500);
+    }
+  }
 
-            </script>
+</script>
 
 </html>
