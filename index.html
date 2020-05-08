@@ -40,12 +40,16 @@
       font-size: 1em;
     }
 
-    .init-anime {
-      stroke-dasharray: 637.7;
-      stroke-dashoffset: 637.7;
+    .state {
+      position: absolute;
+      text-align: center;
+      top: 400px;
+      line-height: 4em;
+      width: 100%;
+      font-size: 3em;
     }
 
-    svg {
+    .item>svg {
       -webkit-transform: rotate(-90deg);
       transform: rotate(-90deg);
     }
@@ -61,26 +65,26 @@
       <p class="image"><img src="tintira.jpg"></p>
     </div>
     <div v-else>
+      <div class="state" v-bind:style="styleNowDisplay"> {{stateNowDisplay}} </div>
       <div class="item">
-        <div class="timer-time"> {{ countDown }} </div>
+        <!-- <div>現在の状態：{{currentState}} <span v-if="currentState ==='act'"> {{countNow}} </span></div> -->
+        <div v-if="currentState !='finish'" class="timer-time"> {{ countDown }} </div>
+        <div v-else class="timer-time">
+          <span>累積学習時間は</span><span style="color:#D9073D"> {{ cumulativeTime }} </span><span>です！えらい！</span>
+        </div>
         <svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
-          <g v-if="currentState ==='act'">
-            <circle id="circle" r="100" cy="110" cx="110" stroke-width="19" stroke="#6fdb6f" fill="none" />
-            <circle id="circle" class="init-anime" v-bind:style="classMoveCircle1" r="100" cy="110" cx="110"
-              stroke-width="20" stroke="#ffffff" fill="none" opacity="70%" />
-          </g>
-          <g v-if="currentState ==='break'">
-            <circle id="circle" r="100" cy="110" cx="110" stroke-width="19" stroke="#8b0000" fill="none" />
-            <circle id="circle" class="init-anime" v-bind:style="classMoveCircle2" r="100" cy="110" cx="110"
-              stroke-width="20" stroke="#ffffff" fill="none" opacity="70%" />
-          </g>
+          <!-- <text v-if="currentState !='finish'" class="timer-time" x="50%" y="50%" text-anchor="middle"
+            dominant-baseline="central">{{ countDown }}</text> -->
+          <circle v-if="currentState ==='before_start'" r="100" cy="110" cx="110" stroke-width="19" stroke="#191970"
+            fill="none" />
+          <circle v-else-if="currentState ==='act'" r="100" cy="110" cx="110" stroke-width="19" stroke="#006400"
+            fill="none" />
+          <circle v-else-if="currentState ==='break'" r="100" cy="110" cx="110" stroke-width="19" stroke="#8b0000"
+            fill="none" />
+          <circle v-if="currentState !='finish'" v-bind:style="classMoveCircle" r="100" cy="110" cx="110"
+            stroke-width="20" stroke="#ffffff" fill="none" opacity="85%" />
         </svg>
       </div>
-      <!-- <p>
-        現在の状態：{{currentState}} <span v-if="currentState ==='act'"> {{countNow}} </span> <br>
-        <span v-if="currentState != 'finish'">残り時間：{{ countDown }}</span>
-        <span v-else>累積時間：<span style="color:#D9073D">{{ cumulativeTime }}</span></span> <br>
-      </p> -->
     </div>
   </div>
 
@@ -109,8 +113,8 @@
       queryInURL: location.search.slice(1).split('&'),
       setTime: location.hash.slice(1),
       countLeft: 3,
-      currentState: 'before_start', // act, break
-      nextBreakpoint: null
+      currentState: 'before_start', // act, break, finish
+      nextBreakpoint: null,
     },
     computed: {
       params: function () {
@@ -119,12 +123,10 @@
           const key_value = this.queryInURL[i].split('=');
           query_dict[key_value[0]] = key_value[1];
         }
-        // durationは分単位を想定
+        // NOTE: durationは分単位を想定
         const duration_act = query_dict['act'] ? Number(query_dict['act']) : 10;
         const duration_break = query_dict['break'] ? Number(query_dict['break']) : 3;
         const num_repeat = query_dict['repeat'] ? Number(query_dict['repeat']) : 6;
-
-        // hour_min = this.setTime.split(':');
         const time_start = moment(this.setTime, "HH:mm");
 
         return { time_start, num_repeat, duration_act, duration_break };
@@ -132,35 +134,57 @@
       countNow: function () {
         return this.params.num_repeat - this.countLeft + 1;
       },
+      stateNowDisplay: function () {
+        let display;
+
+        switch (this.currentState) {
+          case 'before_start':
+            display = 'もう少しで始まるよ！';
+            break;
+          case 'act':
+            display = 'クンフー' + ' ' + this.countNow.toString(10);
+            break;
+          case 'break':
+            display = '休憩中...';
+            break;
+          case 'finish':
+            display = '終了！';
+            break;
+        }
+
+        return display;
+      },
+      styleNowDisplay: function () {
+        const list = { 'before_start': "#191970", 'act': "#006400", 'break': "#8b0000", 'finish': "#D9073D" };
+        return { color: list[this.currentState] };
+      },
       cumulativeTime: function () {
         time_min = this.params.duration_act * this.params.num_repeat;
         return this.format_time(time_min);
       },
       durationCurrentState: function () {
-        // before_startのときは，残り1分からカウント
+        // NOTE: before_startでは残り3分からゲージを減らしていく
         // 単位はsecond
-        const list = { 'before_start': 60, 'act': this.params.duration_act * 60, 'break': this.params.duration_break * 60 };
+        const list = { 'before_start': 180, 'act': this.params.duration_act * 60, 'break': this.params.duration_break * 60 };
         return list[this.currentState];
       },
-      classMoveCircle1: function () {
-        const initial_offset = 203 * Math.PI; // この値は自力で頑張って微調整．アニメーション見ながら0カウントでぴったりバーも0になるように．
+      classMoveCircle: function () {
+        // NOTE: この値は自力で頑張って微調整．アニメーション見ながら，3分タイマーの0カウントでぴったりバーも0になるようにした
+        const initial_offset = 202 * Math.PI;
+        // OPTIMIZE: moment -> "HH:mm" -> HHとmmを整数で取得，の流れは二度手間感がある
         let [min, sec] = this.countDown.split(':').map(str => parseInt(str, 10));
-        if (this.currentState === 'break') {
-          [min, sec] = [this.params.duration_act, 0];
+
+        if (this.currentState === 'before_start' && min > 2) {
+          [min, sec] = [3, 0];
         }
-        const offset = initial_offset * (min * 60 + sec) / this.durationCurrentState;
-        console.log(offset);
-        return { 'stroke-dasharray': initial_offset, 'stroke-dashoffset': offset, transition: '1s all linear' }
-      },
-      classMoveCircle2: function () {
-        const initial_offset = 203 * Math.PI; // この値は自力で頑張って微調整．アニメーション見ながら0カウントでぴったりバーも0になるように．
-        let [min, sec] = this.countDown.split(':').map(str => parseInt(str, 10));
-        if (this.currentState === 'act') {
-          [min, sec] = [this.params.duration_break, 0];
-        }
-        const offset = initial_offset * (min * 60 + sec) / this.durationCurrentState;
-        console.log(offset);
-        return { 'stroke-dasharray': initial_offset, 'stroke-dashoffset': offset, transition: '1s all linear' }
+
+        // NOTE: stateの切り替えが起こるとき，transitionを0sで行わないと現stateの描画と前stateでの描画が干渉する
+        // FIXME: もうちょっとスムーズに切り替えられないかなぁ
+        const trans_sec = (this.countDown === "00:00") ? 0 : 1;
+        // NOTE: 開始の合図と同時に円が出現するようにテコ入れ
+        const offset = (this.countDown === "00:00") ? initial_offset : initial_offset * (min * 60 + sec) / this.durationCurrentState;
+
+        return { 'stroke-dasharray': initial_offset, 'stroke-dashoffset': offset, transition: `${trans_sec}s all linear` };
       }
     },
     methods: {
