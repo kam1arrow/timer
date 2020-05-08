@@ -12,8 +12,43 @@
       margin: auto;
       align-items: center;
     }
-    .image {max-width: 1000px; max-height: 1000px;}
-    .image img {width: 100%;}
+
+    .image {
+      max-width: 1000px;
+      max-height: 1000px;
+    }
+
+    .image img {
+      width: 100%;
+    }
+
+    .item {
+      position: relative;
+      font-size: 3vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      margin: auto;
+      align-items: center;
+    }
+
+    .timer-time {
+      text-align: center;
+      position: absolute;
+      line-height: 4em;
+      width: 100%;
+      font-size: 1em;
+    }
+
+    .init-anime {
+      stroke-dasharray: 637.7;
+      stroke-dashoffset: 637.7;
+    }
+
+    svg {
+      -webkit-transform: rotate(-90deg);
+      transform: rotate(-90deg);
+    }
   </style>
 </head>
 
@@ -25,12 +60,27 @@
       <button v-on:click="set_timer()">ちんちら</button><br>
       <p class="image"><img src="tintira.jpg"></p>
     </div>
-    <div class="timer" v-else>
-      <p>
+    <div v-else>
+      <div class="item">
+        <div class="timer-time"> {{ countDown }} </div>
+        <svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+          <g v-if="currentState ==='act'">
+            <circle id="circle" r="100" cy="110" cx="110" stroke-width="19" stroke="#6fdb6f" fill="none" />
+            <circle id="circle" class="init-anime" v-bind:style="classMoveCircle1" r="100" cy="110" cx="110"
+              stroke-width="20" stroke="#ffffff" fill="none" opacity="70%" />
+          </g>
+          <g v-if="currentState ==='break'">
+            <circle id="circle" r="100" cy="110" cx="110" stroke-width="19" stroke="#8b0000" fill="none" />
+            <circle id="circle" class="init-anime" v-bind:style="classMoveCircle2" r="100" cy="110" cx="110"
+              stroke-width="20" stroke="#ffffff" fill="none" opacity="70%" />
+          </g>
+        </svg>
+      </div>
+      <!-- <p>
         現在の状態：{{currentState}} <span v-if="currentState ==='act'"> {{countNow}} </span> <br>
         <span v-if="currentState != 'finish'">残り時間：{{ countDown }}</span>
         <span v-else>累積時間：<span style="color:#D9073D">{{ cumulativeTime }}</span></span> <br>
-      </p>
+      </p> -->
     </div>
   </div>
 
@@ -86,6 +136,32 @@
         time_min = this.params.duration_act * this.params.num_repeat;
         return this.format_time(time_min);
       },
+      durationCurrentState: function () {
+        // before_startのときは，残り1分からカウント
+        // 単位はsecond
+        const list = { 'before_start': 60, 'act': this.params.duration_act * 60, 'break': this.params.duration_break * 60 };
+        return list[this.currentState];
+      },
+      classMoveCircle1: function () {
+        const initial_offset = 203 * Math.PI; // この値は自力で頑張って微調整．アニメーション見ながら0カウントでぴったりバーも0になるように．
+        let [min, sec] = this.countDown.split(':').map(str => parseInt(str, 10));
+        if (this.currentState === 'break') {
+          [min, sec] = [this.params.duration_act, 0];
+        }
+        const offset = initial_offset * (min * 60 + sec) / this.durationCurrentState;
+        console.log(offset);
+        return { 'stroke-dasharray': initial_offset, 'stroke-dashoffset': offset, transition: '1s all linear' }
+      },
+      classMoveCircle2: function () {
+        const initial_offset = 203 * Math.PI; // この値は自力で頑張って微調整．アニメーション見ながら0カウントでぴったりバーも0になるように．
+        let [min, sec] = this.countDown.split(':').map(str => parseInt(str, 10));
+        if (this.currentState === 'act') {
+          [min, sec] = [this.params.duration_break, 0];
+        }
+        const offset = initial_offset * (min * 60 + sec) / this.durationCurrentState;
+        console.log(offset);
+        return { 'stroke-dasharray': initial_offset, 'stroke-dashoffset': offset, transition: '1s all linear' }
+      }
     },
     methods: {
       format_time: function (time_min) {
@@ -144,7 +220,7 @@
     },
   })
 
-  wait_start = setInterval("timer_start()",1000);　
+  wait_start = setInterval("timer_start()", 1000);
 
   function timer_start() {
     if (vm.is_timer_set) {
