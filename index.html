@@ -47,8 +47,8 @@
   const VueCtkDateTimePicker = window['vue-ctk-date-time-picker'];
   Vue.component('vue-ctk-date-time-picker', VueCtkDateTimePicker);
   
-  var taiko = new Audio('taiko.mp3');
-  var gong = new Audio('gong.mp3');
+  const taiko = new Audio('taiko.mp3');
+  const gong = new Audio('gong.mp3');
 
   const vm = new Vue({
     el: '#app',
@@ -63,18 +63,18 @@
     },
     computed: {
       params: function () {
-        query_dict = new Object;
+        const query_dict = new Object;
         for (i = 0; this.queryInURL[i]; i++) {
-          key_value = this.queryInURL[i].split('=');
+          const key_value = this.queryInURL[i].split('=');
           query_dict[key_value[0]] = key_value[1];
         }
         // durationは分単位を想定
-        duration_act = query_dict['act'] ? Number(query_dict['act']) : 10;
-        duration_break = query_dict['break'] ? Number(query_dict['break']) : 3;
-        num_repeat = query_dict['repeat'] ? Number(query_dict['repeat']) : 6;
+        const duration_act = query_dict['act'] ? Number(query_dict['act']) : 10;
+        const duration_break = query_dict['break'] ? Number(query_dict['break']) : 3;
+        const num_repeat = query_dict['repeat'] ? Number(query_dict['repeat']) : 6;
 
         // hour_min = this.setTime.split(':');
-        time_start = moment(this.setTime, "HH:mm");
+        const time_start = moment(this.setTime, "HH:mm");
 
         return { time_start, num_repeat, duration_act, duration_break };
       },
@@ -101,7 +101,7 @@
       },
       set_timer: function () {
         this.is_timer_set = true;
-        location.hash = this.setTime;
+        location.hash = this.setTime; //URLの書き換え
         this.refresh_counter();
       },
       refresh_counter: function () {
@@ -111,18 +111,21 @@
         // それぞれの場合に応じて，適切なstateとbreakpointを設定すればよい．
         this.nextBreakpoint = this.params.time_start.clone();
 
-        time_elapsed = moment.duration(moment().diff(this.params.time_start)).asMinutes();
-
-        act_plus_break = this.params.duration_act + this.params.duration_break;
+        const time_elapsed = moment.duration(moment().diff(this.params.time_start)).asMinutes();
+        const act_plus_break = this.params.duration_act + this.params.duration_break;
 
         // 現在のセット数（最初のセット=0）と残りセット数
-        set_num = Math.floor(time_elapsed / act_plus_break);
+        const set_num = Math.floor(time_elapsed / act_plus_break);
         this.countLeft = this.params.num_repeat;
 
         if (set_num >= 0) {
-          is_break = (time_elapsed % act_plus_break) > this.params.duration_act;
+          const is_break = (time_elapsed % act_plus_break) > this.params.duration_act;
 
           // ケースに応じて，state，設定すべきbreakpointまでの相対時間，累積時間，残りカウントの4つを設定
+          let minutes_to_next_break_point; 
+          // 上がないと変数のスコープがグローバルになる，
+          // ただletの使用を非推奨とする思想＝再代入可能性はバグのもと，にしたがうならば，三項演算子などによる対応も検討して良い．
+
           if (is_break) {
             this.currentState = 'break';
             minutes_to_next_break_point = act_plus_break * (set_num + 1);
@@ -144,11 +147,11 @@
 
   function timer_start() {
     if (vm.is_timer_set) {
-      id = setInterval(function () {
+      const id = setInterval(function () {
         clearInterval(wait_start);
 
-        diff = vm.nextBreakpoint.diff(moment());
-        count_down_min = moment.duration(diff).asMinutes(); 
+        const diff = vm.nextBreakpoint.diff(moment());
+        const count_down_min = moment.duration(diff).asMinutes(); 
         vm.countDown = vm.format_time(count_down_min);
 
         if (vm.countDown === '00:00') {
