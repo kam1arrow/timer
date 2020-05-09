@@ -9,7 +9,7 @@
 
 ## 使い方
 
-[](https://kam1arrow.github.io/timer/)
+[https://kam1arrow.github.io/timer/?act=10&break=3&repeat=6#08:30](https://kam1arrow.github.io/timer/?act=10&break=3&repeat=6#08:30)
 
 パラメータは，URL内のクエリ（?以降）やフラグメント（#以降）の値を参照して，設定されます．
 
