@@ -19,14 +19,6 @@
       justify-content: center;
       align-items: center;
     }
-
-    .finish-message {
-      text-align: center;
-      position: absolute;
-      line-height: 4em;
-      width: 100%;
-      font-size: 100%;
-    }
   </style>
 </head>
 
@@ -40,9 +32,6 @@
     </div>
     <div v-else>
       <div class="timer">
-        <div v-if="currentState === 'finish'" class="finish-message">
-          <span></span>
-        </div>
         <svg width="400" height="400" viewBox="0 0 400 450" xmlns="http://www.w3.org/2000/svg"
           xmlns:xlink="http://www.w3.org/1999/xlink">
           <text class="display-state" v-bind:fill="colorDisplay" x="200" y="40" font-size="50" text-anchor="middle"
@@ -54,12 +43,12 @@
             {{ countDown }}
           </text>
           <g v-else>
+            <text x="200" y="180" font-size="30" text-anchor="middle" dominant-baseline="central">
+              累計
+            </text>
             <text x="200" y="250" v-bind:font-size="cumulativeDisplaySize" fill="#8b0000" text-anchor="middle"
               dominant-baseline="central">
               {{ cumulativeTime }}
-            </text>
-            <text x="200" y="180" font-size="30" text-anchor="middle" dominant-baseline="central">
-              累計
             </text>
           </g>
           <circle v-if="currentState ==='before_start'" r="150" cy="250" cx="200" stroke-width="40" stroke="#191970"
@@ -152,10 +141,11 @@
       },
       cumulativeDisplaySize: function () {
         time_min = this.params.duration_act * this.params.num_repeat;
-        if (time_min > 60) {
-          return 50;
-        } else {
+        console.log(time_min);
+        if (time_min < 60) {
           return 80;
+        } else {
+          return 50;
         }
       },
       durationCurrentState: function () {
