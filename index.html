@@ -12,7 +12,7 @@
 
     .timer {
       height: 70vh;
-      /* margin: auto; */
+      padding: 30px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -21,7 +21,7 @@
     .start-screen {
       align-items: center;
       max-width: 30%;
-      /* padding: 30px; */
+      padding: 30px;
       margin: auto;
       justify-content: center;
     }
@@ -36,38 +36,36 @@
       <button type="button" class="btn btn-primary" v-on:click="set_timer()">ちんちら</button><br>
       <p class="image"><img src="tintira.jpg"></p>
     </div>
-    <div v-else>
-      <div class="timer">
-        <svg width="400" height="400" viewBox="0 0 400 450" xmlns="http://www.w3.org/2000/svg"
-          xmlns:xlink="http://www.w3.org/1999/xlink">
-          <text class="display-state" v-bind:fill="colorDisplay" x="200" y="40" font-size="50" text-anchor="middle"
-            dominant-baseline="central">
-            {{stateNowDisplay}}
+    <div v-else class="timer">
+      <svg width="400" height="400" viewBox="0 0 400 450" xmlns="http://www.w3.org/2000/svg"
+        xmlns:xlink="http://www.w3.org/1999/xlink">
+        <text class="display-state" v-bind:fill="colorDisplay" x="200" y="40" font-size="50" text-anchor="middle"
+          dominant-baseline="central">
+          {{stateNowDisplay}}
+        </text>
+        <text v-if="currentState !='finish'" x="200" y="250" font-size="80" text-anchor="middle"
+          dominant-baseline="central">
+          {{ countDown }}
+        </text>
+        <g v-else>
+          <text x="200" y="180" font-size="30" text-anchor="middle" dominant-baseline="central">
+            累計
           </text>
-          <text v-if="currentState !='finish'" x="200" y="250" font-size="80" text-anchor="middle"
+          <text x="200" y="250" v-bind:font-size="cumulativeDisplaySize" fill="#8b0000" text-anchor="middle"
             dominant-baseline="central">
-            {{ countDown }}
+            {{ cumulativeTime }}
           </text>
-          <g v-else>
-            <text x="200" y="180" font-size="30" text-anchor="middle" dominant-baseline="central">
-              累計
-            </text>
-            <text x="200" y="250" v-bind:font-size="cumulativeDisplaySize" fill="#8b0000" text-anchor="middle"
-              dominant-baseline="central">
-              {{ cumulativeTime }}
-            </text>
-          </g>
-          <circle v-if="currentState ==='before_start'" r="150" cy="250" cx="200" stroke-width="40" stroke="#191970"
-            fill="none" />
-          <circle v-else-if="currentState ==='act'" r="150" cy="250" cx="200" stroke-width="40" stroke="#006400"
-            fill="none" />
-          <circle v-else-if="currentState ==='break'" r="150" cy="250" cx="200" stroke-width="40" stroke="#8b0000"
-            fill="none" />
-          <circle v-if="currentState !='finish'" v-bind:style="classMoveCircle" r="150" cy="250" cx="200"
-            stroke-width="41" stroke="#ffffff" fill="none" opacity="85%" transform="rotate(-90, 200, 250)" />
-          <circle v-else r="150" cy="250" cx="200" stroke-width="40" stroke="#8b0000" fill="none" />
-        </svg>
-      </div>
+        </g>
+        <circle v-if="currentState ==='before_start'" r="150" cy="250" cx="200" stroke-width="40" stroke="#191970"
+          fill="none" />
+        <circle v-else-if="currentState ==='act'" r="150" cy="250" cx="200" stroke-width="40" stroke="#006400"
+          fill="none" />
+        <circle v-else-if="currentState ==='break'" r="150" cy="250" cx="200" stroke-width="40" stroke="#8b0000"
+          fill="none" />
+        <circle v-if="currentState !='finish'" v-bind:style="classMoveCircle" r="150" cy="250" cx="200"
+          stroke-width="41" stroke="#ffffff" fill="none" opacity="85%" transform="rotate(-90, 200, 250)" />
+        <circle v-else r="150" cy="250" cx="200" stroke-width="40" stroke="#8b0000" fill="none" />
+      </svg>
     </div>
   </div>
 
