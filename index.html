@@ -6,27 +6,30 @@
     integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
   <title>ちんちらタイマー</title>
   <style type="text/css">
-    .image {
-      max-width: 1000px;
-      max-height: 1000px;
-    }
-
     .image img {
       width: 100%;
     }
 
     .timer {
-      height: 70vh;
+      height: 50vh;
       display: flex;
       justify-content: center;
       align-items: center;
+    }
+
+    .start-screen {
+      align-items: center;
+      max-width: 30%;
+      padding: 30px;
+      margin: auto;
+      justify-content: center;
     }
   </style>
 </head>
 
 <body>
   <div id="app">
-    <div v-if="!is_timer_set">
+    <div v-if="!is_timer_set" class="start-screen">
       <vue-ctk-date-time-picker label="When do you start?" v-model="setTime" format="HH:mm" formatted="HH:mm" only-time>
       </vue-ctk-date-time-picker>
       <button type="button" class="btn btn-primary" v-on:click="set_timer()">ちんちら</button><br>
