@@ -189,9 +189,13 @@
         }
       },
       set_timer: function () {
-        this.is_timer_set = true;
-        location.hash = this.setTime; //URLの書き換え
-        this.refresh_counter();
+        if (this.setTime === "") {
+          alert("Start time is required!");
+        } else {
+          this.is_timer_set = true;
+          location.hash = this.setTime; //URLの書き換え
+          this.refresh_counter();
+        }
       },
       refresh_counter: function () {
         // 基本的な計算の流れを，活動15分インターバル5分で活動するケースを取って説明
