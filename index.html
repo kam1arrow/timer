@@ -2,6 +2,8 @@
 <html>
 
 <head>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
   <title>ちんちらタイマー</title>
   <style type="text/css">
     .image {
@@ -27,7 +29,7 @@
     <div v-if="!is_timer_set">
       <vue-ctk-date-time-picker label="When do you start?" v-model="setTime" format="HH:mm" formatted="HH:mm" only-time>
       </vue-ctk-date-time-picker>
-      <button v-on:click="set_timer()">ちんちら</button><br>
+      <button type="button" class="btn btn-primary" v-on:click="set_timer()">ちんちら</button><br>
       <p class="image"><img src="tintira.jpg"></p>
     </div>
     <div v-else>
