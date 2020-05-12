@@ -46,23 +46,17 @@
     <div v-else class="timer">
       <svg width="400" height="400" viewBox="0 0 400 450" xmlns="http://www.w3.org/2000/svg"
         xmlns:xlink="http://www.w3.org/1999/xlink">
-        <text class="display-state" v-bind:fill="colorDisplay" x="200" y="40" font-size="50" text-anchor="middle"
-          dominant-baseline="central">
+        <text v-bind:fill="colorDisplay" x="200" y="40" font-size="50" text-anchor="middle" dominant-baseline="central">
           {{stateNowDisplay}}
         </text>
-        <text v-if="currentState !='finish'" x="200" y="250" font-size="80" text-anchor="middle"
+        <text v-if="currentState ==='finish'" x="200" y="180" font-size="30" text-anchor="middle"
+          dominant-baseline="central">
+          累計
+        </text>
+        <text x="200" y="250" v-bind:font-size="displayTimeSize" v-bind:fill="colorDisplay" text-anchor="middle"
           dominant-baseline="central">
           {{ countDown }}
         </text>
-        <g v-else>
-          <text x="200" y="180" font-size="30" text-anchor="middle" dominant-baseline="central">
-            累計
-          </text>
-          <text x="200" y="250" v-bind:font-size="cumulativeDisplaySize" fill="#8b0000" text-anchor="middle"
-            dominant-baseline="central">
-            {{ cumulativeTime }}
-          </text>
-        </g>
         <circle v-if="currentState ==='before_start'" r="150" cy="250" cx="200" stroke-width="40" stroke="#191970"
           fill="none" />
         <circle v-else-if="currentState ==='act'" r="150" cy="250" cx="200" stroke-width="40" stroke="#006400"
@@ -150,10 +144,9 @@
         time_min = this.params.duration_act * this.params.num_repeat;
         return this.format_time(time_min);
       },
-      cumulativeDisplaySize: function () {
-        time_min = this.params.duration_act * this.params.num_repeat;
-        console.log(time_min);
-        if (time_min < 60) {
+      displayTimeSize: function () {
+        // mm:ssかHH:mm:ssかによって表示サイズを変える
+        if (this.countDown.length <= 5) {
           return 80;
         } else {
           return 50;
@@ -273,7 +266,7 @@
           }
         }
         if (vm.countLeft <= 0) {
-          vm.countDown = '';
+          vm.countDown = vm.format_time(vm.cumulativeTime);
           vm.currentState = 'finish';
           clearInterval(id);
         }
