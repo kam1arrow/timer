@@ -266,7 +266,7 @@
           }
         }
         if (vm.countLeft <= 0) {
-          vm.countDown = vm.format_time(vm.cumulativeTime);
+          vm.countDown = vm.cumulativeTime;
           vm.currentState = 'finish';
           clearInterval(id);
         }
