@@ -98,6 +98,15 @@
       currentState: 'before_start', // act, break, finish
       nextBreakpoint: null,
     },
+    mounted: function () {
+      if (this.setTime === "") {
+        // NOTE: 現在時刻から最も近い5分単位の時刻を指定
+        const now = moment();
+        const min = now.minutes();
+        const min_target = min % 10 < 5 ? min - (min % 10) + 5 : min - (min % 10) + 10;
+        this.setTime = now.minutes(min_target).format("HH:mm");
+      }
+    },
     computed: {
       params: function () {
         const query_dict = new Object;
