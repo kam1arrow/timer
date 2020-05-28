@@ -259,7 +259,8 @@
         const count_down_min = moment.duration(diff).asMinutes();
         vm.countDown = vm.format_time(count_down_min);
 
-        if (vm.countDown === '00:00') {
+        // 判定条件はこれで上手く動くのか
+        if (moment().add(0.5, 's').isAfter(vm.nextBreakpoint)) {
           switch (vm.currentState) {
             case 'before_start':
             case 'break':
