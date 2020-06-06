@@ -41,7 +41,9 @@
     <div v-if="!is_timer_set" class="start-screen">
       <vue-ctk-date-time-picker label="When do you start?" v-model="setTime" format="HH:mm" formatted="HH:mm" only-time>
       </vue-ctk-date-time-picker>
-      <button type="button" class="btn btn-primary" v-on:click="set_timer()">ちんちら</button><br>
+      <button type="button" class="btn btn-primary" v-on:click="set_timer()">ちんちら</button>
+      <button type="button" class="btn btn-danger" v-on:click="reset_timer()">リセット</button>
+      <br>
       <p class="image"><img src="tintira.jpg"></p>
     </div>
     <div v-else class="timer">
@@ -101,11 +103,7 @@
     },
     mounted: function () {
       if (this.setTime === "") {
-        // NOTE: 現在時刻から最も近い5分単位の時刻を指定
-        const now = moment();
-        const min = now.minutes();
-        const min_target = min % 10 < 5 ? min - (min % 10) + 5 : min - (min % 10) + 10;
-        this.setTime = now.minutes(min_target).format("HH:mm");
+        this.set_timer_nearest_mod5();
       }
     },
     computed: {
@@ -208,6 +206,17 @@
           location.hash = this.setTime; //URLの書き換え
           this.refresh_counter();
         }
+      },
+      reset_timer: function () {
+        const noHashURL = window.location.href.replace(/#.*$/, '');
+        window.history.replaceState('', document.title, noHashURL);
+        this.set_timer_nearest_mod5();
+      },
+      set_timer_nearest_mod5: function () {
+        const now = moment();
+        const min = now.minutes();
+        const min_target = min % 10 < 5 ? min - (min % 10) + 5 : min - (min % 10) + 10;
+        this.setTime = now.minutes(min_target).format("HH:mm");
       },
       refresh_counter: function () {
         // 基本的な計算の流れを，活動15分インターバル5分で活動するケースを取って説明
