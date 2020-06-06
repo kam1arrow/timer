@@ -117,7 +117,16 @@
         const duration_act = query_dict['act'] ? Number(query_dict['act']) : 10;
         const duration_break = query_dict['break'] ? Number(query_dict['break']) : 3;
         const num_repeat = query_dict['repeat'] ? Number(query_dict['repeat']) : 6;
-        const time_start = moment(this.setTime, "HH:mm");
+        let time_start = moment(this.setTime, "HH:mm");
+
+        // 日跨ぎ判定 -> 日付の調整
+        let set_moment = time_start.clone();
+        const day_before = set_moment.date();
+        const duration_all = (duration_act + duration_break) * num_repeat - duration_break;
+        const day_after = set_moment.add(moment.duration(duration_all, 'minutes')).date();
+        if (day_before < day_after) {
+          time_start.add(moment.duration(-1, 'days'));
+        }
 
         return { time_start, num_repeat, duration_act, duration_break };
       },
@@ -216,6 +225,7 @@
         const now = moment();
         const min = now.minutes();
         const min_target = min % 10 < 5 ? min - (min % 10) + 5 : min - (min % 10) + 10;
+        // NOTE: now.minutes(60)は1時間先の時刻
         this.setTime = now.minutes(min_target).format("HH:mm");
       },
       refresh_counter: function () {
