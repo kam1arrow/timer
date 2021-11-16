@@ -4,6 +4,7 @@
 <head>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
     integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.0/font/bootstrap-icons.css">
   <title>ちんちらタイマー without ちんちら</title>
   <link rel="icon" href="favicon.ico">
   <style type="text/css">
@@ -27,11 +28,18 @@
       align-items: center;
     }
 
-    .start-screen {
-      position: relative;
-      align-items: center;
-      margin: auto;
-      justify-content: center;
+    .volume-icon {
+      z-index: 999;
+      position: fixed;
+      right: 50px;
+      bottom: 50px;
+      transition: 0.5s;
+      opacity: 0.5;
+      text-align: center;
+    }
+
+    .volume-icon:hover {
+      opacity: 1;
     }
   </style>
 </head>
@@ -59,6 +67,10 @@
         <circle v-else r="150" cy="250" cx="200" stroke-width="40" stroke="#8b0000" fill="none" />
       </svg>
     </div>
+    <div class="volume-icon" @click="toggle_mute()">
+      <i v-if="isMuted" class="bi bi-volume-mute-fill" style="font-size: 84px"></i>
+      <i v-else class="bi bi-volume-up-fill" style="font-size: 84px"></i>
+    </div>
   </div>
 
 </body>
@@ -75,7 +87,6 @@
 
   const taiko = new Audio('taiko.mp3');
   const gong = new Audio('gong.mp3');
-  gong.volume = 0.1;
 
   const vm = new Vue({
     el: '#app',
@@ -84,7 +95,9 @@
       currentState: 'act',
       nextBreakpoint: null,
       duration_act: 25,
-      duration_break: 5
+      duration_break: 5,
+      volumes: { 'taiko': 1, 'gong': 0.1 },
+      isMuted: false,
     },
     computed: {
       stateNowDisplay: function () {
@@ -95,7 +108,6 @@
         return list[this.currentState];
       },
       durationCurrentState: function () {
-        // NOTE: before_startでは残り3分からゲージを減らしていく
         // 単位はsecond
         const list = { 'act': this.duration_act * 60, 'break': this.duration_break * 60 };
         return list[this.currentState];
@@ -121,6 +133,7 @@
       initialize_all: function () {
         this.initialize_currentState();
         this.initialize_nextBreakpoint();
+        this.initialize_volumes();
       },
       initialize_nextBreakpoint: function () {
         const now = moment().seconds(0).milliseconds(0);
@@ -131,6 +144,19 @@
       },
       initialize_currentState: function () {
         this.currentState = (moment().minutes() % 30 < 5) ? 'break' : 'act';
+      },
+      initialize_volumes: function () {
+        taiko.volume = this.volumes.taiko;
+        gong.volume = this.volumes.gong;
+      },
+      toggle_mute: function () {
+        this.isMuted = !this.isMuted;
+        if (this.isMuted) {
+          taiko.volume = 0;
+          gong.volume = 0;
+        } else {
+          this.initialize_volumes();
+        }
       }
     },
   })
@@ -139,7 +165,6 @@
 
   const id = setInterval(function () {
     // clearInterval(wait_start);
-
     const diff = vm.nextBreakpoint.diff(moment());
     const count_down_min = moment.duration(diff).asMinutes();
     vm.countDown = vm.format_time(count_down_min);
