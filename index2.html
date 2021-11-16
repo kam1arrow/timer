@@ -81,16 +81,12 @@
     el: '#app',
     data: {
       countDown: '',
+      currentState: 'act',
       nextBreakpoint: null,
       duration_act: 25,
       duration_break: 5
     },
     computed: {
-      currentState: function () {
-        const min_now = moment().minutes;
-        const state = (min_now % 30 < 5) ? 'break' : 'act';
-        return state;
-      },
       stateNowDisplay: function () {
         return display = this.currentState == 'act' ? '功夫' : '休憩中';
       },
@@ -122,17 +118,24 @@
       format_time: function (time_min) {
         return moment.utc(moment.duration(time_min, 'minutes').asMilliseconds()).format("mm:ss");
       },
+      initialize_all: function () {
+        this.initialize_currentState();
+        this.initialize_nextBreakpoint();
+      },
       initialize_nextBreakpoint: function () {
-        const now = moment();
+        const now = moment().seconds(0).milliseconds(0);
         const min = now.minutes();
         const min_target = min % 30 < 5 ? min - (min % 30) + 5 : min - (min % 30) + 30;
         // NOTE: now.minutes(60)は1時間先の時刻
         this.nextBreakpoint = now.minutes(min_target);
       },
+      initialize_currentState: function () {
+        this.currentState = (moment().minutes() % 30 < 5) ? 'break' : 'act';
+      }
     },
   })
 
-  vm.initialize_nextBreakpoint();
+  vm.initialize_all();
 
   const id = setInterval(function () {
     // clearInterval(wait_start);
