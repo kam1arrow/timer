@@ -5,36 +5,36 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
     integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.0/font/bootstrap-icons.css">
-  <title>ちんちらタイマー without ちんちら</title>
+  <title>ちんちらタイマー（レスポンシブ）</title>
   <link rel="icon" href="favicon.ico">
   <style type="text/css">
-    .image img {
-      width: 100%;
+    svg {
+      max-height: 100%;
+      max-width: 100%;
     }
 
     #app {
-      padding: 30px;
-      height: 50vh;
-      width: 30vw;
+      height: 100vh;
+      width: 100vw;
       margin: auto;
+      user-select: none;
+      font-family: 'monospace';
     }
 
     .timer {
-      position: relative;
-      margin: auto;
-      top: 15%;
+      height: 100%;
+      width: 100%;
       display: flex;
       justify-content: center;
-      align-items: center;
     }
 
     .volume-icon {
       z-index: 999;
-      position: relative;
-      top: 50px;
+      position: absolute;
       transition: 0.5s;
       opacity: 0.5;
       text-align: center;
+      justify-content: center;
     }
 
     .volume-icon:hover {
@@ -45,8 +45,8 @@
 
 <body>
   <div id="app">
-    <div class="timer">
-      <svg width="400" height="400" viewBox="0 0 400 450" xmlns="http://www.w3.org/2000/svg"
+    <div class="timer" @click="toggle_mute()">
+      <svg viewBox="0 0 400 450" fill="none" xmlns="http://www.w3.org/2000/svg"
         xmlns:xlink="http://www.w3.org/1999/xlink">
         <text v-bind:fill="colorDisplay" x="200" y="40" font-size="50" text-anchor="middle" dominant-baseline="central">
           {{stateNowDisplay}}
@@ -64,11 +64,21 @@
         <circle v-if="currentState !='finish'" v-bind:style="classMoveCircle" r="150" cy="250" cx="200"
           stroke-width="41" stroke="#ffffff" fill="none" opacity="85%" transform="rotate(-90, 200, 250)" />
         <circle v-else r="150" cy="250" cx="200" stroke-width="40" stroke="#8b0000" fill="none" />
+        <svg v-if="isMuted" x="170" y="280" viewBox="0 0 100 100" v-bind:fill="colorDisplay" opacity="0.5"
+          class="bi bi-volume-mute-fill">
+          <path
+            d="M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06zm7.137 2.096a.5.5 0 0 1 0 .708L12.207 8l1.647 1.646a.5.5 0 0 1-.708.708L11.5 8.707l-1.646 1.647a.5.5 0 0 1-.708-.708L10.793 8 9.146 6.354a.5.5 0 1 1 .708-.708L11.5 7.293l1.646-1.647a.5.5 0 0 1 .708 0z" />
+        </svg>
+        <svg v-else x="170" y="280" viewBox="0 0 100 100" v-bind:fill="colorDisplay" class="bi bi-volume-up-fill">
+          <path
+            d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z" />
+          <path
+            d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.483 5.483 0 0 1 11.025 8a5.483 5.483 0 0 1-1.61 3.89l.706.706z" />
+          <path
+            d="M8.707 11.182A4.486 4.486 0 0 0 10.025 8a4.486 4.486 0 0 0-1.318-3.182L8 5.525A3.489 3.489 0 0 1 9.025 8 3.49 3.49 0 0 1 8 10.475l.707.707zM6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06z" />
+        </svg>
+
       </svg>
-    </div>
-    <div class="volume-icon" @click="toggle_mute()">
-      <i v-if="isMuted" class="bi bi-volume-mute-fill" style="font-size: 84px"></i>
-      <i v-else class="bi bi-volume-up-fill" style="font-size: 84px"></i>
     </div>
   </div>
 
@@ -102,7 +112,7 @@
     },
     computed: {
       stateNowDisplay: function () {
-        return display = this.currentState == 'act' ? '功夫' : '休憩中';
+        return display = this.currentState == 'act' ? 'もくもく中' : '休憩中';
       },
       colorDisplay: function () {
         const list = { 'act': "#006400", 'break': "#8b0000" };
