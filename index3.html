@@ -1,0 +1,241 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+#map-wrap { position: relative; background: #ddeef5; border-radius: 12px; border: 0.5px solid var(--color-border-tertiary); overflow: hidden; touch-action: manipulation; }
+#info-panel {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: var(--color-background-primary);
+  border-top: 0.5px solid var(--color-border-secondary);
+  border-radius: 12px 12px 0 0;
+  padding: 14px 16px 20px;
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+  z-index: 20;
+  touch-action: manipulation;
+}
+#info-panel.open { transform: translateY(0); }
+#panel-name { font-size: 15px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+#panel-addr { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 10px; line-height: 1.5; }
+#panel-times { display: flex; gap: 8px; margin-bottom: 14px; }
+.tb { font-size: 12px; padding: 3px 10px; border-radius: 20px; }
+.walk { background: #EAF3DE; color: #3B6D11; }
+.taxi { background: #FAEEDA; color: #854F0B; }
+.hotel-badge { background: #FAECE7; color: #993C1D; }
+#copy-btn {
+  width: 100%; padding: 11px; border-radius: 8px;
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-secondary);
+  font-size: 14px; font-weight: 500; color: var(--color-text-primary);
+  cursor: pointer; text-align: center;
+  transition: background 0.15s;
+}
+#copy-btn:active { background: var(--color-border-tertiary); }
+#copy-btn.copied { background: #EAF3DE; color: #3B6D11; border-color: #C0DD97; }
+#panel-close {
+  position: absolute; top: 12px; right: 14px;
+  font-size: 20px; color: var(--color-text-tertiary);
+  cursor: pointer; line-height: 1; padding: 4px;
+}
+.legend { display: flex; gap: 12px; padding: 10px 14px; flex-wrap: wrap; border-top: 0.5px solid var(--color-border-tertiary); }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--color-text-secondary); }
+.legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.tap-hint { text-align: center; font-size: 11px; color: var(--color-text-tertiary); padding: 5px 0 8px; }
+</style>
+
+<div id="map-wrap">
+<svg id="map-svg" viewBox="0 0 380 340" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
+  <rect width="380" height="340" fill="#f0ede8"/>
+  <path d="M198,0 C202,50 208,85 210,115 C213,148 204,170 201,200 C198,230 200,270 202,340" fill="none" stroke="#b8d8e8" stroke-width="12" opacity="0.7"/>
+  <path d="M0,120 C50,118 100,115 130,118 C155,120 170,122 190,121 C200,120 205,118 210,117" fill="none" stroke="#b8d8e8" stroke-width="6" opacity="0.6"/>
+  <line x1="0" y1="155" x2="380" y2="155" stroke="#e0d8cc" stroke-width="1.2"/>
+  <line x1="110" y1="0" x2="110" y2="340" stroke="#e0d8cc" stroke-width="1.2"/>
+  <line x1="235" y1="0" x2="235" y2="340" stroke="#e0d8cc" stroke-width="1"/>
+  <line x1="0" y1="240" x2="380" y2="240" stroke="#e0d8cc" stroke-width="1"/>
+  <line x1="0" y1="80" x2="380" y2="80" stroke="#e0d8cc" stroke-width="1"/>
+  <text x="52"  y="65"  font-size="9" fill="#b4b2a9" font-family="sans-serif" text-anchor="middle">静安区</text>
+  <text x="160" y="65"  font-size="9" fill="#b4b2a9" font-family="sans-serif" text-anchor="middle">黄浦区</text>
+  <text x="290" y="65"  font-size="9" fill="#b4b2a9" font-family="sans-serif" text-anchor="middle">浦東新区</text>
+  <text x="52"  y="220" font-size="9" fill="#b4b2a9" font-family="sans-serif" text-anchor="middle">長寧区</text>
+  <g id="lines"></g>
+  <g id="pins"></g>
+</svg>
+<div id="info-panel">
+  <span id="panel-close">×</span>
+  <div id="panel-name"></div>
+  <div id="panel-addr"></div>
+  <div id="panel-times">
+    <span class="tb walk" id="panel-walk"></span>
+    <span class="tb taxi" id="panel-taxi"></span>
+  </div>
+  <div id="copy-btn">住所をコピー</div>
+</div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#D85A30"></div>ガーデンホテル（起点）</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#185FA5"></div>観光・体験</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#3B6D11"></div>空港</div>
+</div>
+<div class="tap-hint">ピンをタップ → 詳細表示 → 「住所をコピー」</div>
+
+<script>
+const places = [
+  { id:"garden",       name:"ガーデンホテル",        label:"ガーデン\nホテル",    addr:"茂名南路58号",                                     cat:"hotel",      x:168, y:140, walkMin:0,    taxiMin:0  },
+  { id:"hongqiao",     name:"虹橋国際空港",           label:"虹橋\n空港",          addr:"上海市长宁区虹桥路2550号",                         cat:"airport",    x:22,  y:174, walkMin:null, taxiMin:30 },
+  { id:"pudong",       name:"浦東国際空港",           label:"浦東\n空港",          addr:"迎宾大道6000号",                                   cat:"airport",    x:358, y:302, walkMin:null, taxiMin:50 },
+  { id:"shcenter",     name:"上海中心大廈",           label:"上海中心\n大廈",      addr:"上海市浦东新区东泰路126号",                        cat:"attraction", x:248, y:112, walkMin:null, taxiMin:15 },
+  { id:"yuyuan",       name:"豫園",                  label:"豫園",                addr:"福佑路168号",                                      cat:"attraction", x:204, y:186, walkMin:25,   taxiMin:8  },
+  { id:"cpc",          name:"一大会址",               label:"一大\n会址",          addr:"兴业路76号",                                       cat:"attraction", x:154, y:180, walkMin:15,   taxiMin:5  },
+  { id:"ins",          name:"INS新楽園",              label:"INS\n新楽園",        addr:"雁荡路109号",                                      cat:"attraction", x:178, y:162, walkMin:8,    taxiMin:3  },
+  { id:"sleepnomore",  name:"SleepNoMore",            label:"Sleep\nNoMore",      addr:"北京西路1013号",                                   cat:"attraction", x:136, y:112, walkMin:22,   taxiMin:7  },
+  { id:"umeplay_tian", name:"UMEPLAY 天安千樹店",     label:"UMEPLAY\n天安千樹",  addr:"上海市普陀区莫干山路600号大洋晶典·天安千树",      cat:"attraction", x:100, y:96,  walkMin:null, taxiMin:20 },
+  { id:"umeplay_yang", name:"UMEPLAY 楊浦店",         label:"UMEPLAY\n楊浦店",    addr:"上海市杨浦区黄兴路221号互联宝地D2栋101室",        cat:"attraction", x:250, y:66,  walkMin:null, taxiMin:25 },
+  { id:"sandbox",      name:"SANDBOX VR",             label:"SANDBOX\nVR",        addr:"淮海中路381号中环广场L2层",                        cat:"attraction", x:148, y:158, walkMin:12,   taxiMin:4  },
+];
+
+const colors = { hotel:"#D85A30", airport:"#3B6D11", attraction:"#185FA5" };
+const hotel = places[0];
+const svgEl  = document.getElementById("map-svg");
+const pinsG  = document.getElementById("pins");
+const linesG = document.getElementById("lines");
+const panel  = document.getElementById("info-panel");
+
+// dashed lines
+places.forEach(p => {
+  if (p.id === "garden") return;
+  const l = document.createElementNS("http://www.w3.org/2000/svg","line");
+  l.setAttribute("x1",hotel.x); l.setAttribute("y1",hotel.y);
+  l.setAttribute("x2",p.x);     l.setAttribute("y2",p.y);
+  l.setAttribute("stroke","#ccc"); l.setAttribute("stroke-width","0.7");
+  l.setAttribute("stroke-dasharray","3,5"); l.setAttribute("opacity","0.5");
+  linesG.appendChild(l);
+});
+
+const labelOffset = {
+  garden:       {dx:0,   dy:-17},
+  hongqiao:     {dx:0,   dy:-17},
+  pudong:       {dx:0,   dy:-17},
+  shcenter:     {dx:0,   dy:-17},
+  yuyuan:       {dx:20,  dy:-6 },
+  cpc:          {dx:-22, dy:-17},
+  ins:          {dx:22,  dy:-6 },
+  sleepnomore:  {dx:0,   dy:-17},
+  umeplay_tian: {dx:0,   dy:-17},
+  umeplay_yang: {dx:0,   dy:-17},
+  sandbox:      {dx:-24, dy:-6 },
+};
+
+places.forEach(p => {
+  const col = colors[p.cat];
+  const r   = p.id==="garden" ? 9 : 7;
+  const off = labelOffset[p.id] || {dx:0,dy:-17};
+  const g   = document.createElementNS("http://www.w3.org/2000/svg","g");
+  g.style.cursor = "pointer";
+
+  // large invisible hit area
+  const hit = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  hit.setAttribute("cx",p.x); hit.setAttribute("cy",p.y);
+  hit.setAttribute("r","18"); hit.setAttribute("fill","transparent");
+  g.appendChild(hit);
+
+  const oc = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  oc.setAttribute("cx",p.x); oc.setAttribute("cy",p.y);
+  oc.setAttribute("r",r); oc.setAttribute("fill",col); oc.setAttribute("opacity","0.9");
+  oc.setAttribute("id","oc-"+p.id);
+  g.appendChild(oc);
+
+  const ic = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  ic.setAttribute("cx",p.x); ic.setAttribute("cy",p.y);
+  ic.setAttribute("r",p.id==="garden"?4:3); ic.setAttribute("fill","#fff");
+  g.appendChild(ic);
+
+  // label
+  const lines = p.label.split("\n");
+  const lx = p.x + off.dx, ly = p.y + off.dy;
+  const fs = 8.5, lh = 10;
+  const bw = Math.max(...lines.map(l=>l.length)) * 5.4 + 6;
+  const bh = lines.length * lh + 3;
+  const bg = document.createElementNS("http://www.w3.org/2000/svg","rect");
+  bg.setAttribute("x",lx-bw/2); bg.setAttribute("y",ly-lh*lines.length+1);
+  bg.setAttribute("width",bw); bg.setAttribute("height",bh);
+  bg.setAttribute("fill","rgba(255,255,255,0.8)"); bg.setAttribute("rx","2");
+  g.appendChild(bg);
+
+  lines.forEach((ln,i) => {
+    const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x",lx); t.setAttribute("y",ly-(lines.length-1-i)*lh);
+    t.setAttribute("text-anchor","middle"); t.setAttribute("font-size",fs);
+    t.setAttribute("font-family","sans-serif"); t.setAttribute("fill","#2C2C2A");
+    t.setAttribute("font-weight","500"); t.textContent = ln;
+    g.appendChild(t);
+  });
+
+  pinsG.appendChild(g);
+
+  g.addEventListener("touchend", e => { e.preventDefault(); openPanel(p); });
+  g.addEventListener("click", () => openPanel(p));
+});
+
+let activePlace = null;
+let activeOc    = null;
+
+function openPanel(p) {
+  // reset previous highlight
+  if (activeOc) { activeOc.setAttribute("opacity","0.9"); activeOc.setAttribute("r", activeOc._baseR); }
+
+  activePlace = p;
+  activeOc    = document.getElementById("oc-"+p.id);
+  activeOc._baseR = p.id==="garden"?9:7;
+  activeOc.setAttribute("opacity","1");
+  activeOc.setAttribute("r", activeOc._baseR + 3);
+
+  document.getElementById("panel-name").textContent = p.name;
+  document.getElementById("panel-addr").textContent = p.addr;
+
+  const wEl = document.getElementById("panel-walk");
+  const tEl = document.getElementById("panel-taxi");
+
+  if (p.id === "garden") {
+    wEl.className="tb hotel-badge"; wEl.textContent="★ 起点";
+    tEl.style.display="none";
+  } else {
+    tEl.style.display="";
+    wEl.className="tb walk";
+    wEl.textContent = p.walkMin ? "🚶 "+p.walkMin+"分" : "🚶 遠距離";
+    tEl.className="tb taxi";
+    tEl.textContent = "🚕 "+p.taxiMin+"分";
+  }
+
+  const btn = document.getElementById("copy-btn");
+  btn.textContent = "住所をコピー";
+  btn.className = "";
+  btn.onclick = () => copyAddr(p);
+
+  panel.classList.add("open");
+}
+
+document.getElementById("panel-close").addEventListener("click", closePanel);
+document.getElementById("panel-close").addEventListener("touchend", e => { e.preventDefault(); closePanel(); });
+
+function closePanel() {
+  panel.classList.remove("open");
+  if (activeOc) { activeOc.setAttribute("opacity","0.9"); activeOc.setAttribute("r", activeOc._baseR); activeOc=null; }
+  activePlace = null;
+}
+
+function copyAddr(p) {
+  const t = p.addr;
+  const btn = document.getElementById("copy-btn");
+  const done = () => { btn.textContent="✓ コピーしました！"; btn.className="copied"; };
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(t).then(done).catch(()=>{ fbCopy(t); done(); });
+  } else { fbCopy(t); done(); }
+}
+function fbCopy(t) {
+  const ta = document.createElement("textarea");
+  ta.value=t; ta.style.cssText="position:fixed;opacity:0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); } catch(e){}
+  document.body.removeChild(ta);
+}
+</script>
